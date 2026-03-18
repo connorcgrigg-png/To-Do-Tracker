@@ -38,7 +38,9 @@
   </section>
 
   <section class="nav-section">
-    <p class="nav-label">Categories</p>
+    <p class="nav-label">Categories
+      <button class="add-inline-btn" id="add-category-btn" title="Add category">+</button>
+    </p>
     <div id="categories-nav"></div>
   </section>
 </nav>
@@ -117,12 +119,7 @@
         </label>
         <label>Category
           <select id="task-category">
-            <option value="Work">Work</option>
-            <option value="Personal">Personal</option>
-            <option value="Health">Health</option>
-            <option value="Finance">Finance</option>
-            <option value="Learning">Learning</option>
-            <option value="Other">Other</option>
+            <!-- Populated dynamically from categories -->
           </select>
         </label>
       </div>
@@ -170,9 +167,35 @@
       </label>
     </div>
     <div class="modal-footer">
+      <button class="btn-danger hidden" id="delete-project-btn">Delete</button>
       <div class="footer-right">
         <button class="btn-ghost" id="cancel-project-btn">Cancel</button>
         <button class="btn-primary" id="save-project-btn">Save Project</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CATEGORY MODAL ===== -->
+<div id="category-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="cat-modal-title">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h3 id="cat-modal-title">New Category</h3>
+      <button class="modal-close" id="cat-modal-close-btn" aria-label="Close">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <label>Category Name <span class="required">*</span>
+        <input type="text" id="category-name-input" placeholder="My Category" autocomplete="off" />
+      </label>
+      <label>Color
+        <div id="category-color-swatches" class="color-swatches"></div>
+      </label>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-danger hidden" id="delete-category-btn">Delete</button>
+      <div class="footer-right">
+        <button class="btn-ghost" id="cancel-category-btn">Cancel</button>
+        <button class="btn-primary" id="save-category-btn">Save Category</button>
       </div>
     </div>
   </div>
