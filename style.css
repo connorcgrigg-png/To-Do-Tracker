@@ -348,6 +348,86 @@ label input, label select, label textarea { font-size: 14px; text-transform: non
 .empty-msg { color: var(--color-text-muted); text-align: center; margin-top: 48px; font-size: 15px; }
 
 /* =============================================
+   Week calendar grid
+   ============================================= */
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+  align-items: start;
+  overflow-x: auto;
+}
+
+.week-day-col {
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  min-height: 320px;
+  min-width: 120px;
+  transition: border-color var(--transition);
+}
+.week-day-col.is-today {
+  border-color: var(--color-primary);
+}
+
+.week-day-header {
+  padding: 10px 10px 8px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  user-select: none;
+}
+.week-day-name {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--color-text-muted);
+}
+.week-day-col.is-today .week-day-name { color: var(--color-primary); }
+.week-day-date { font-size: 13px; font-weight: 600; color: var(--color-text); }
+
+.week-day-tasks {
+  flex: 1;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 60px;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  transition: background var(--transition);
+}
+.week-day-tasks.drag-over { background: rgba(99,102,241,.07); }
+
+/* Compact task card inside week columns */
+.week-task-card {
+  padding: 8px 10px;
+  margin-bottom: 0;
+  cursor: grab;
+}
+.week-task-card:active { cursor: grabbing; }
+.week-task-card.dragging { opacity: .35; }
+
+.week-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin-bottom: 5px;
+}
+.week-card-top .task-title {
+  font-size: 13px;
+  white-space: normal;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* =============================================
    Dashboard
    ============================================= */
 .dashboard-grid {

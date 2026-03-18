@@ -168,8 +168,8 @@ function renderMainView() {
       break;
     case 'week':
       titleEl.textContent = 'This Week';
-      filteredTasks = tasks.filter(t => isThisWeek(t.dueDate));
-      break;
+      renderWeekCalendar();
+      return;
     case 'project': {
       const proj = projects.find(p => p.id === currentView.id);
       titleEl.textContent = proj ? proj.name : 'Project';
@@ -279,6 +279,117 @@ function buildTaskCard(task) {
 
   // Open edit modal on card click
   card.addEventListener('click', () => openTaskModal(task.id));
+
+  return card;
+}
+
+// ══════════════════════════════════════════════
+//   Week calendar view (day columns + drag-drop)
+// ══════════════════════════════════════════════
+function renderWeekCalendar() {
+  const container = document.getElementById('task-groups');
+  const emptyMsg  = document.getElementById('empty-msg');
+  container.innerHTML = '';
+  emptyMsg.classList.add('hidden');
+
+  const monDate  = new Date(weekStartStr() + 'T00:00:00');
+  const dayNames = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+  const grid = document.createElement('div');
+  grid.className = 'week-grid';
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monDate);
+    d.setDate(d.getDate() + i);
+    const dateStr = d.toISOString().slice(0, 10);
+    const isCurrentDay = dateStr === todayStr();
+    const monthDay = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+    const col = document.createElement('div');
+    col.className = 'week-day-col' + (isCurrentDay ? ' is-today' : '');
+    col.innerHTML = `
+      <div class="week-day-header">
+        <span class="week-day-name">${dayNames[i]}</span>
+        <span class="week-day-date">${monthDay}</span>
+      </div>
+      <div class="week-day-tasks" data-date="${dateStr}"></div>
+    `;
+
+    const tasksZone = col.querySelector('.week-day-tasks');
+    tasks.filter(t => t.dueDate === dateStr).forEach(t => {
+      tasksZone.appendChild(buildWeekTaskCard(t));
+    });
+
+    tasksZone.addEventListener('dragover', e => {
+      e.preventDefault();
+      tasksZone.classList.add('drag-over');
+    });
+    tasksZone.addEventListener('dragleave', e => {
+      // only remove if leaving the zone itself, not a child
+      if (!tasksZone.contains(e.relatedTarget)) {
+        tasksZone.classList.remove('drag-over');
+      }
+    });
+    tasksZone.addEventListener('drop', e => {
+      e.preventDefault();
+      tasksZone.classList.remove('drag-over');
+      const taskId = e.dataTransfer.getData('text/plain');
+      const task = tasks.find(t => t.id === taskId);
+      if (task && task.dueDate !== dateStr) {
+        task.dueDate = dateStr;
+        saveData();
+        renderWeekCalendar();
+        renderSidebar();
+      }
+    });
+
+    grid.appendChild(col);
+  }
+
+  container.appendChild(grid);
+}
+
+function buildWeekTaskCard(task) {
+  const card = document.createElement('div');
+  const overdue = !task.completed && isOverdue(task.dueDate);
+  const dueSoon = !task.completed && isDueSoon(task.dueDate);
+
+  let cls = 'task-card week-task-card';
+  if (task.completed) cls += ' completed';
+  else if (overdue)   cls += ' overdue';
+  else if (dueSoon)   cls += ' due-soon';
+  card.className = cls;
+  card.draggable = true;
+
+  const proj = projects.find(p => p.id === task.projectId);
+  const projDot = proj
+    ? `<span class="proj-dot" style="background:${proj.color};width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0;"></span>`
+    : '';
+
+  card.innerHTML = `
+    <div class="week-card-top">
+      <div class="task-check${task.completed ? ' checked' : ''}" data-id="${task.id}" role="checkbox" aria-checked="${task.completed}"></div>
+      <div class="task-title">${escHtml(task.title)}</div>
+    </div>
+    <div class="task-meta">
+      ${projDot}
+      ${proj ? `<span style="font-size:10px;color:${proj.color};font-weight:600;">${escHtml(proj.name)}</span>` : ''}
+      <span class="tag tag-cat ${escHtml(task.category)}">${escHtml(task.category)}</span>
+    </div>
+  `;
+
+  card.querySelector('.task-check').addEventListener('click', e => {
+    e.stopPropagation();
+    toggleComplete(task.id);
+  });
+  card.addEventListener('click', () => openTaskModal(task.id));
+
+  card.addEventListener('dragstart', e => {
+    e.dataTransfer.setData('text/plain', task.id);
+    e.dataTransfer.effectAllowed = 'move';
+    setTimeout(() => card.classList.add('dragging'), 0);
+  });
+  card.addEventListener('dragend', () => card.classList.remove('dragging'));
 
   return card;
 }
