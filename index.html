@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Personal Planner</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav id="sidebar">
+  <div class="sidebar-header">
+    <span class="app-logo">&#10003;</span>
+    <h1 class="app-name">Planner</h1>
+  </div>
+
+  <section class="nav-section">
+    <p class="nav-label">Views</p>
+    <button class="nav-btn active" data-view="today">
+      <span class="nav-icon">&#9788;</span> Today
+      <span class="badge" id="badge-today"></span>
+    </button>
+    <button class="nav-btn" data-view="week">
+      <span class="nav-icon">&#128197;</span> This Week
+      <span class="badge" id="badge-week"></span>
+    </button>
+    <button class="nav-btn" data-view="dashboard">
+      <span class="nav-icon">&#9646;</span> Dashboard
+    </button>
+  </section>
+
+  <section class="nav-section">
+    <p class="nav-label">Projects
+      <button class="add-inline-btn" id="add-project-btn" title="Add project">+</button>
+    </p>
+    <div id="projects-nav"></div>
+  </section>
+
+  <section class="nav-section">
+    <p class="nav-label">Categories</p>
+    <div id="categories-nav"></div>
+  </section>
+</nav>
+
+<!-- ===== MAIN ===== -->
+<main id="main">
+  <!-- Top bar -->
+  <header id="topbar">
+    <h2 id="view-title">Today</h2>
+    <button class="btn-primary" id="new-task-btn">+ New Task</button>
+  </header>
+
+  <!-- Alert bar for overdue tasks -->
+  <div id="alert-bar" class="alert-bar hidden">
+    <span id="alert-text"></span>
+    <button id="alert-close">&#x2715;</button>
+  </div>
+
+  <!-- View containers -->
+  <div id="view-content">
+
+    <!-- TODAY / WEEK / PROJECT / CATEGORY views share this list layout -->
+    <div id="task-list-view">
+      <div id="task-groups"></div>
+      <p id="empty-msg" class="empty-msg hidden">No tasks here. Add one!</p>
+    </div>
+
+    <!-- DASHBOARD view -->
+    <div id="dashboard-view" class="hidden">
+      <div class="dashboard-grid">
+        <div class="stat-card">
+          <div class="stat-number" id="stat-completed-week">0</div>
+          <div class="stat-label">Completed this week</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="stat-pending-today">0</div>
+          <div class="stat-label">Due today</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="stat-overdue">0</div>
+          <div class="stat-label overdue-label">Overdue</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="stat-total-open">0</div>
+          <div class="stat-label">Open tasks</div>
+        </div>
+      </div>
+
+      <h3 class="section-heading">Project Progress</h3>
+      <div id="project-progress"></div>
+
+      <h3 class="section-heading">Completed This Week</h3>
+      <div id="weekly-chart"></div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ===== TASK MODAL ===== -->
+<div id="task-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-title">New Task</h3>
+      <button class="modal-close" id="modal-close-btn" aria-label="Close">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <label>Title <span class="required">*</span>
+        <input type="text" id="task-title" placeholder="What needs to be done?" autocomplete="off" />
+      </label>
+
+      <div class="form-row">
+        <label>Project
+          <select id="task-project">
+            <option value="">— None —</option>
+          </select>
+        </label>
+        <label>Category
+          <select id="task-category">
+            <option value="Work">Work</option>
+            <option value="Personal">Personal</option>
+            <option value="Health">Health</option>
+            <option value="Finance">Finance</option>
+            <option value="Learning">Learning</option>
+            <option value="Other">Other</option>
+          </select>
+        </label>
+      </div>
+
+      <label>Due Date
+        <input type="date" id="task-due" />
+      </label>
+
+      <label>Notes
+        <textarea id="task-notes" rows="3" placeholder="Extra details…"></textarea>
+      </label>
+
+      <div class="subtasks-section">
+        <p class="subtasks-heading">Subtasks</p>
+        <div id="subtask-list"></div>
+        <div class="subtask-add-row">
+          <input type="text" id="new-subtask-input" placeholder="Add subtask…" />
+          <button id="add-subtask-btn" class="btn-secondary">Add</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-danger hidden" id="delete-task-btn">Delete</button>
+      <div class="footer-right">
+        <button class="btn-ghost" id="cancel-modal-btn">Cancel</button>
+        <button class="btn-primary" id="save-task-btn">Save Task</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PROJECT MODAL ===== -->
+<div id="project-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="proj-modal-title">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h3 id="proj-modal-title">New Project</h3>
+      <button class="modal-close" id="proj-modal-close-btn" aria-label="Close">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <label>Project Name <span class="required">*</span>
+        <input type="text" id="project-name-input" placeholder="My Project" autocomplete="off" />
+      </label>
+      <label>Color
+        <div id="color-swatches" class="color-swatches"></div>
+      </label>
+    </div>
+    <div class="modal-footer">
+      <div class="footer-right">
+        <button class="btn-ghost" id="cancel-project-btn">Cancel</button>
+        <button class="btn-primary" id="save-project-btn">Save Project</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
