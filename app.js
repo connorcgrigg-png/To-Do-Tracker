@@ -269,13 +269,27 @@ function renderMainView() {
 // ══════════════════════════════════════════════
 //   Task list rendering
 // ══════════════════════════════════════════════
+
+/** Group an array of tasks by projectId, returning [{proj, tasks}] in project order */
+function groupTasksByProject(taskList) {
+  const map = new Map();
+  taskList.forEach(t => {
+    const key = t.projectId || '__none__';
+    if (!map.has(key)) map.set(key, []);
+    map.get(key).push(t);
+  });
+  const result = [];
+  projects.forEach(p => {
+    if (map.has(p.id)) result.push({ proj: p, tasks: map.get(p.id) });
+  });
+  if (map.has('__none__')) result.push({ proj: null, tasks: map.get('__none__') });
+  return result;
+}
+
 function renderTaskGroups(taskList) {
   const container = document.getElementById('task-groups');
   const emptyMsg  = document.getElementById('empty-msg');
   container.innerHTML = '';
-
-  const pending   = taskList.filter(t => !t.completed);
-  const completed = taskList.filter(t => t.completed);
 
   if (taskList.length === 0) {
     emptyMsg.classList.remove('hidden');
@@ -283,16 +297,31 @@ function renderTaskGroups(taskList) {
   }
   emptyMsg.classList.add('hidden');
 
-  if (pending.length)   renderGroup(container, 'Pending', pending);
-  if (completed.length) renderGroup(container, 'Completed', completed);
-}
+  const groups = groupTasksByProject(taskList);
+  groups.forEach(({ proj, tasks: groupTasks }) => {
+    const section = document.createElement('div');
+    section.className = 'task-project-section';
 
-function renderGroup(container, label, list) {
-  const group = document.createElement('div');
-  group.className = 'task-group';
-  group.innerHTML = `<div class="task-group-title">${escHtml(label)}<span class="group-count">${list.length}</span></div>`;
-  list.forEach(t => group.appendChild(buildTaskCard(t)));
-  container.appendChild(group);
+    // Project section header
+    const header = document.createElement('div');
+    header.className = 'task-project-header';
+    const dotColor = proj ? proj.color : 'var(--color-text-muted)';
+    const nameColor = proj ? proj.color : 'var(--color-text-muted)';
+    const label = proj ? escHtml(proj.name) : 'No Project';
+    header.innerHTML = `
+      <span class="proj-dot" style="background:${dotColor}"></span>
+      <span class="task-project-name" style="color:${nameColor}">${label}</span>
+      <span class="group-count">${groupTasks.length}</span>
+    `;
+    section.appendChild(header);
+
+    // Pending first, then completed
+    const pending   = groupTasks.filter(t => !t.completed);
+    const completed = groupTasks.filter(t => t.completed);
+    [...pending, ...completed].forEach(t => section.appendChild(buildTaskCard(t)));
+
+    container.appendChild(section);
+  });
 }
 
 function buildTaskCard(task) {
@@ -304,36 +333,42 @@ function buildTaskCard(task) {
 
   let cardClass = 'task-card';
   if (task.completed) cardClass += ' completed';
-  else if (overdue)   cardClass += ' overdue';
-  else if (dueSoon)   cardClass += ' due-soon';
   card.className = cardClass;
 
-  // Subtask progress
+  const proj      = projects.find(p => p.id === task.projectId);
+  const catColors = getCatColors(task.category);
+
+  // Color-code: bg = category tint; left border = urgency or project color
+  card.style.background  = catColors.bg;
+  card.style.borderColor = catColors.bg;
+  if (overdue) {
+    card.style.borderLeftColor = '#ef4444';
+    card.style.borderLeftWidth = '5px';
+  } else if (proj) {
+    card.style.borderLeftColor = proj.color;
+    card.style.borderLeftWidth = '5px';
+  } else if (dueSoon) {
+    card.style.borderLeftColor = '#f59e0b';
+    card.style.borderLeftWidth = '5px';
+  }
+
   const sub     = task.subtasks || [];
   const subDone = sub.filter(s => s.completed).length;
   const subPct  = sub.length ? Math.round((subDone / sub.length) * 100) : null;
 
-  // Project info
-  const proj    = projects.find(p => p.id === task.projectId);
-  const projDot = proj
-    ? `<span class="proj-dot" style="background:${proj.color};width:8px;height:8px;"></span>`
-    : '';
-
-  // Category tag colours
-  const catColors = getCatColors(task.category);
-
-  // Date label
-  let dateLabel = '';
+  // Info row: "Project · Category · Date"
+  let infoHtml = '';
+  if (proj) infoHtml += `<span style="font-weight:700;color:${proj.color};">${escHtml(proj.name)}</span><span class="card-info-sep">·</span>`;
+  infoHtml += `<span style="color:${catColors.text};font-weight:600;">${escHtml(task.category)}</span>`;
   if (task.dueDate) {
     let cls = 'tag-due';
     let prefix = '';
     if (overdue)      { cls += ' overdue';  prefix = 'Overdue · '; }
     else if (today)   { cls += ' today';    prefix = 'Today · '; }
     else if (dueSoon) { cls += ' due-soon'; }
-    dateLabel = `<span class="${cls}">${prefix}${fmtDate(task.dueDate)}</span>`;
+    infoHtml += `<span class="card-info-sep">·</span><span class="${cls}">${prefix}${fmtDate(task.dueDate)}</span>`;
   }
 
-  // Indicator badge
   let indicator = '';
   if (overdue)                indicator = `<span class="indicator overdue">Overdue</span>`;
   else if (dueSoon && !today) indicator = `<span class="indicator due-soon">Soon</span>`;
@@ -341,16 +376,11 @@ function buildTaskCard(task) {
   card.innerHTML = `
     <div class="task-check${task.completed ? ' checked' : ''}" data-id="${task.id}" role="checkbox" aria-checked="${task.completed}"></div>
     <div class="task-body">
-      <div class="task-title">${escHtml(task.title)}</div>
-      <div class="task-meta">
-        ${projDot}
-        ${proj ? `<span class="proj-name-tag" style="color:${proj.color};">${escHtml(proj.name)}</span>` : ''}
-        <span class="tag tag-cat" style="background:${catColors.bg};color:${catColors.text};">${escHtml(task.category)}</span>
-        ${dateLabel}
-      </div>
-      ${task.notes ? `<div class="notes-preview">${escHtml(task.notes)}</div>` : ''}
+      <div class="task-title" style="color:${catColors.text};">${escHtml(task.title)}</div>
+      <div class="task-card-info">${infoHtml}</div>
+      ${task.notes ? `<div class="notes-preview" style="color:${catColors.text};">${escHtml(task.notes)}</div>` : ''}
       ${sub.length ? `
-        <div class="subtask-progress">${subDone}/${sub.length} subtasks
+        <div class="subtask-progress" style="color:${catColors.text};">${subDone}/${sub.length} subtasks
           <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${subPct}%"></div></div>
         </div>` : ''}
     </div>
@@ -399,8 +429,19 @@ function renderWeekCalendar() {
     `;
 
     const tasksZone = col.querySelector('.week-day-tasks');
-    tasks.filter(t => t.dueDate === dateStr).forEach(t => {
-      tasksZone.appendChild(buildWeekTaskCard(t));
+    const dayTasks  = tasks.filter(t => t.dueDate === dateStr);
+    const dayGroups = groupTasksByProject(dayTasks);
+    dayGroups.forEach(({ proj: grpProj, tasks: grpTasks }) => {
+      // Project mini-header (only show when there are multiple project groups)
+      if (dayGroups.length > 1) {
+        const hdr = document.createElement('div');
+        hdr.className = 'week-proj-mini-header';
+        const dotColor  = grpProj ? grpProj.color : 'var(--color-text-muted)';
+        const nameColor = grpProj ? grpProj.color : 'var(--color-text-muted)';
+        hdr.innerHTML = `<span class="proj-dot" style="background:${dotColor}"></span><span style="color:${nameColor}">${grpProj ? escHtml(grpProj.name) : 'No Project'}</span>`;
+        tasksZone.appendChild(hdr);
+      }
+      grpTasks.forEach(t => tasksZone.appendChild(buildWeekTaskCard(t)));
     });
 
     tasksZone.addEventListener('dragover', e => {
@@ -434,28 +475,40 @@ function buildWeekTaskCard(task) {
   const overdue = !task.completed && isOverdue(task.dueDate);
   const dueSoon = !task.completed && isDueSoon(task.dueDate);
 
-  let cls = 'task-card week-task-card';
+  let cls = 'week-task-card';
   if (task.completed) cls += ' completed';
-  else if (overdue)   cls += ' overdue';
-  else if (dueSoon)   cls += ' due-soon';
   card.className = cls;
   card.draggable = true;
 
   const proj      = projects.find(p => p.id === task.projectId);
-  const projDot   = proj
-    ? `<span class="proj-dot" style="background:${proj.color};width:7px;height:7px;"></span>`
-    : '';
   const catColors = getCatColors(task.category);
 
+  // Color-code: bg = category tint, left border = urgency or project color
+  card.style.background  = catColors.bg;
+  card.style.borderColor = catColors.bg;
+  if (overdue) {
+    card.style.borderLeftColor = '#ef4444';
+    card.style.borderLeftWidth = '5px';
+  } else if (proj) {
+    card.style.borderLeftColor = proj.color;
+    card.style.borderLeftWidth = '5px';
+  } else if (dueSoon) {
+    card.style.borderLeftColor = '#f59e0b';
+    card.style.borderLeftWidth = '5px';
+  }
+
+  // Footer: "Project · Category" (only if there's a project; category always shown)
+  let footerHtml = '';
+  if (proj) footerHtml += `<span style="font-weight:700;color:${proj.color};">${escHtml(proj.name)}</span><span class="card-info-sep">·</span>`;
+  footerHtml += `<span style="color:${catColors.text};">${escHtml(task.category)}</span>`;
+  if (overdue)  footerHtml += `<span class="card-info-sep">·</span><span style="color:#ef4444;font-weight:700;">Overdue</span>`;
+  else if (dueSoon) footerHtml += `<span class="card-info-sep">·</span><span style="color:#f59e0b;font-weight:700;">Soon</span>`;
+
   card.innerHTML = `
-    <div class="week-card-top">
-      <div class="task-check${task.completed ? ' checked' : ''}" data-id="${task.id}" role="checkbox" aria-checked="${task.completed}"></div>
-      <div class="task-title">${escHtml(task.title)}</div>
-    </div>
-    <div class="task-meta">
-      ${projDot}
-      ${proj ? `<span class="proj-name-tag" style="color:${proj.color};font-size:10px;">${escHtml(proj.name)}</span>` : ''}
-      <span class="tag tag-cat" style="background:${catColors.bg};color:${catColors.text};">${escHtml(task.category)}</span>
+    <div class="task-check${task.completed ? ' checked' : ''}" data-id="${task.id}" role="checkbox" aria-checked="${task.completed}"></div>
+    <div class="week-card-body">
+      <div class="task-title" style="color:${catColors.text};">${escHtml(task.title)}</div>
+      <div class="week-card-footer">${footerHtml}</div>
     </div>
   `;
 

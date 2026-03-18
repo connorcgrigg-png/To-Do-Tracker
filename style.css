@@ -87,21 +87,10 @@ label input, label select, label textarea { font-size: 14px; text-transform: non
   padding: 20px 18px 14px;
   border-bottom: 1px solid rgba(255,255,255,.06);
 }
-.app-logo {
-  font-size: 22px;
-  color: var(--color-primary);
-  line-height: 1;
-}
-.app-name {
-  font-size: 18px;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: .02em;
-}
+.app-logo { font-size: 22px; color: var(--color-primary); line-height: 1; }
+.app-name { font-size: 18px; font-weight: 700; color: #fff; letter-spacing: .02em; }
 
-.nav-section {
-  padding: 14px 10px 6px;
-}
+.nav-section { padding: 14px 10px 6px; }
 .nav-label {
   font-size: 10px;
   text-transform: uppercase;
@@ -156,7 +145,7 @@ label input, label select, label textarea { font-size: 14px; text-transform: non
 }
 .badge:empty { display: none; }
 
-/* Project / category nav items — wrapper divs */
+/* Project / category nav items */
 .proj-nav-item, .cat-nav-item {
   display: flex;
   align-items: center;
@@ -170,7 +159,6 @@ label input, label select, label textarea { font-size: 14px; text-transform: non
 .proj-nav-item:hover, .cat-nav-item:hover { background: var(--color-sidebar-hover); color: #fff; }
 .proj-nav-item.active, .cat-nav-item.active { background: var(--color-sidebar-active); color: #fff; }
 
-/* The clickable main area inside each item */
 .proj-nav-main, .cat-nav-main {
   display: flex;
   align-items: center;
@@ -183,25 +171,10 @@ label input, label select, label textarea { font-size: 14px; text-transform: non
   min-width: 0;
   overflow: hidden;
 }
+.item-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
 
-.item-label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  flex: 1;
-  min-width: 0;
-}
-
-/* Edit / delete action buttons — revealed on hover */
-.item-actions {
-  display: none;
-  align-items: center;
-  gap: 2px;
-  padding-right: 6px;
-  flex-shrink: 0;
-}
-.proj-nav-item:hover .item-actions,
-.cat-nav-item:hover .item-actions { display: flex; }
+.item-actions { display: none; align-items: center; gap: 2px; padding-right: 6px; flex-shrink: 0; }
+.proj-nav-item:hover .item-actions, .cat-nav-item:hover .item-actions { display: flex; }
 
 .item-action-btn {
   width: 20px; height: 20px;
@@ -215,22 +188,12 @@ label input, label select, label textarea { font-size: 14px; text-transform: non
 .item-action-btn:hover { background: rgba(255,255,255,.15); color: #fff; }
 .item-action-btn.del:hover { background: rgba(239,68,68,.25); color: #fca5a5; }
 
-.proj-dot {
-  width: 9px; height: 9px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
+.proj-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 
 /* =============================================
    Main content
    ============================================= */
-#main {
-  margin-left: var(--sidebar-width);
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
+#main { margin-left: var(--sidebar-width); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
 
 #topbar {
   height: var(--topbar-height);
@@ -247,7 +210,6 @@ label input, label select, label textarea { font-size: 14px; text-transform: non
 }
 #view-title { font-size: 20px; font-weight: 700; }
 
-/* Alert bar */
 .alert-bar {
   background: #fef3c7;
   border-bottom: 1.5px solid var(--color-warning);
@@ -268,59 +230,67 @@ label input, label select, label textarea { font-size: 14px; text-transform: non
 #view-content { padding: 24px 28px; flex: 1; }
 
 /* =============================================
-   Task groups & cards
+   Project section headers (list view grouping)
    ============================================= */
-.task-group { margin-bottom: 28px; }
-.task-group-title {
+.task-project-section { margin-bottom: 28px; }
+
+.task-project-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 2px;
+  margin-bottom: 10px;
+}
+.task-project-header .proj-dot { width: 10px; height: 10px; }
+.task-project-name {
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: .08em;
-  color: var(--color-text-muted);
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  letter-spacing: .07em;
 }
-.task-group-title .group-count {
+.task-project-header .group-count {
   background: var(--color-border);
   color: var(--color-text-muted);
   border-radius: 8px;
   padding: 1px 7px;
   font-size: 11px;
+  font-weight: 600;
+  margin-left: 2px;
 }
 
+/* =============================================
+   Task cards
+   ============================================= */
 .task-card {
   background: var(--color-surface);
-  border: 1.5px solid var(--color-border);
+  border: 1.5px solid transparent;
   border-radius: var(--radius-md);
-  padding: 16px 18px;
-  margin-bottom: 10px;
+  padding: 14px 16px;
+  margin-bottom: 8px;
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  transition: box-shadow var(--transition), border-color var(--transition);
+  transition: box-shadow var(--transition);
   cursor: pointer;
   position: relative;
   overflow: hidden;
+  /* border-left width is set via JS; baseline is 1.5px from above shorthand */
 }
-.task-card:hover { box-shadow: var(--shadow-md); border-color: var(--color-primary); }
+.task-card:hover { box-shadow: var(--shadow-md); }
 .task-card.completed { opacity: .55; }
-.task-card.overdue { border-left: 4px solid var(--color-overdue); }
-.task-card.due-soon { border-left: 4px solid var(--color-warning); }
 
 /* Checkbox */
 .task-check {
   width: 20px; height: 20px;
   border-radius: 50%;
-  border: 2px solid var(--color-border);
+  border: 2px solid rgba(0,0,0,.18);
   flex-shrink: 0;
   margin-top: 2px;
   display: flex; align-items: center; justify-content: center;
   transition: background var(--transition), border-color var(--transition);
   cursor: pointer;
 }
-.task-check:hover { border-color: var(--color-primary); }
+.task-check:hover { border-color: rgba(0,0,0,.4); }
 .task-check.checked { background: var(--color-success); border-color: var(--color-success); }
 .task-check.checked::after { content: '✓'; color: #fff; font-size: 11px; font-weight: 700; }
 
@@ -329,7 +299,6 @@ label input, label select, label textarea { font-size: 14px; text-transform: non
 .task-title {
   font-size: 14.5px;
   font-weight: 600;
-  color: var(--color-text);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -338,67 +307,41 @@ label input, label select, label textarea { font-size: 14px; text-transform: non
 }
 .task-card.completed .task-title { text-decoration: line-through; }
 
-.task-meta {
+/* Card info row: "Project · Category · Date" */
+.task-card-info {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 7px;
-  overflow: hidden;
+  gap: 4px;
+  margin-top: 6px;
+  font-size: 11.5px;
+  font-weight: 500;
 }
-
-.proj-name-tag {
-  font-size: 11px;
-  font-weight: 600;
-  white-space: nowrap;
+.card-info-sep {
+  color: rgba(0,0,0,.25);
+  font-size: 10px;
+  margin: 0 1px;
 }
-
-.tag {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 3px 9px;
-  border-radius: 9px;
-  white-space: nowrap;
-  max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex-shrink: 0;
-}
-
-/* Fallback base colour; actual bg/text come from inline styles */
-.tag-cat { background: #ede9fe; color: #6d28d9; }
-
 .tag-due {
-  display: flex; align-items: center; gap: 3px;
-  font-size: 11px; font-weight: 600; color: var(--color-text-muted);
-  white-space: nowrap;
+  display: inline-flex; align-items: center;
+  font-size: 11.5px; font-weight: 600;
 }
 .tag-due.overdue { color: var(--color-overdue); }
 .tag-due.due-soon { color: var(--color-warning); }
 .tag-due.today { color: var(--color-primary); }
 
-.subtask-progress {
-  font-size: 11px;
-  color: var(--color-text-muted);
-  margin-top: 7px;
-}
-.progress-bar-wrap {
-  height: 4px;
-  border-radius: 2px;
-  background: var(--color-border);
-  margin-top: 4px;
-  overflow: hidden;
-}
+.subtask-progress { font-size: 11px; margin-top: 7px; opacity: .7; }
+.progress-bar-wrap { height: 4px; border-radius: 2px; background: rgba(0,0,0,.12); margin-top: 4px; overflow: hidden; }
 .progress-bar-fill { height: 100%; border-radius: 2px; background: var(--color-success); transition: width .3s; }
 
 .indicator { font-size: 11px; font-weight: 700; margin-left: auto; padding: 2px 6px; border-radius: 6px; flex-shrink: 0; }
-.indicator.overdue { background: #fee2e2; color: var(--color-danger); }
-.indicator.due-soon { background: #fef3c7; color: #92400e; }
+.indicator.overdue { background: rgba(239,68,68,.15); color: var(--color-danger); }
+.indicator.due-soon { background: rgba(245,158,11,.15); color: #92400e; }
 
 .notes-preview {
   font-size: 12px;
-  color: var(--color-text-muted);
-  margin-top: 5px;
+  margin-top: 4px;
+  opacity: .7;
   display: -webkit-box;
   -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
@@ -414,7 +357,7 @@ label input, label select, label textarea { font-size: 14px; text-transform: non
 .week-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 10px;
+  gap: 12px;
   align-items: start;
   overflow-x: auto;
 }
@@ -426,16 +369,14 @@ label input, label select, label textarea { font-size: 14px; text-transform: non
   display: flex;
   flex-direction: column;
   min-height: 320px;
-  min-width: 150px;
+  min-width: 160px;
   transition: border-color var(--transition);
   overflow: hidden;
 }
-.week-day-col.is-today {
-  border-color: var(--color-primary);
-}
+.week-day-col.is-today { border-color: var(--color-primary); }
 
 .week-day-header {
-  padding: 10px 10px 8px;
+  padding: 10px 12px 8px;
   border-bottom: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
@@ -458,38 +399,73 @@ label input, label select, label textarea { font-size: 14px; text-transform: non
   padding: 8px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0;
   min-height: 60px;
   border-radius: 0 0 var(--radius-md) var(--radius-md);
   transition: background var(--transition);
 }
 .week-day-tasks.drag-over { background: rgba(99,102,241,.07); }
 
-/* Compact task card inside week columns */
-.week-task-card {
-  padding: 10px 10px;
-  margin-bottom: 0;
-  cursor: grab;
+/* Project mini-header inside week day columns */
+.week-proj-mini-header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 4px 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--color-text-muted);
+  margin-top: 4px;
 }
-.week-task-card:active { cursor: grabbing; }
-.week-task-card.dragging { opacity: .35; }
+.week-proj-mini-header:first-child { margin-top: 0; }
+.week-proj-mini-header .proj-dot { width: 7px; height: 7px; }
 
-.week-card-top {
+/* Week task cards */
+.week-task-card {
+  border-radius: var(--radius-sm);
+  padding: 9px 11px;
+  margin-bottom: 6px;
+  cursor: grab;
   display: flex;
   align-items: flex-start;
-  gap: 7px;
+  gap: 8px;
+  border: 1.5px solid transparent;
+  overflow: hidden;
+  transition: box-shadow var(--transition);
+  position: relative;
+}
+.week-task-card:hover { box-shadow: var(--shadow-md); }
+.week-task-card:active { cursor: grabbing; }
+.week-task-card.dragging { opacity: .35; }
+.week-task-card.completed { opacity: .55; }
+.week-task-card.completed .task-title { text-decoration: line-through; }
+
+.week-card-body { flex: 1; min-width: 0; }
+
+/* Week card title: full text, no clamp */
+.week-task-card .task-title {
+  font-size: 13px;
+  font-weight: 600;
+  display: block;   /* override webkit-box */
+  overflow: visible;
+  -webkit-line-clamp: unset;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.45;
   margin-bottom: 6px;
 }
-.week-card-top .task-title {
-  font-size: 13px;
-  -webkit-line-clamp: 2;
-  flex: 1;
-  min-width: 0;
-}
 
-.week-task-card .task-meta {
+/* Week card footer: "Project · Category" */
+.week-card-footer {
+  display: flex;
+  align-items: center;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 3px;
+  font-size: 10.5px;
+  font-weight: 600;
+  opacity: .8;
 }
 
 /* =============================================
@@ -515,14 +491,12 @@ label input, label select, label textarea { font-size: 14px; text-transform: non
 
 .section-heading { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--color-text-muted); margin-bottom: 14px; }
 
-/* Project progress bars */
 .proj-progress-row { margin-bottom: 14px; }
 .proj-progress-header { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 5px; }
 .proj-pct { color: var(--color-text-muted); font-size: 12px; }
 .proj-bar-wrap { height: 8px; background: var(--color-border); border-radius: 4px; overflow: hidden; }
 .proj-bar-fill { height: 100%; border-radius: 4px; transition: width .4s ease; }
 
-/* Weekly chart */
 .weekly-chart-row { display: flex; align-items: flex-end; gap: 10px; height: 80px; }
 .day-col { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
 .day-bar-wrap { flex: 1; width: 100%; display: flex; flex-direction: column; justify-content: flex-end; }
@@ -533,48 +507,13 @@ label input, label select, label textarea { font-size: 14px; text-transform: non
 /* =============================================
    Buttons
    ============================================= */
-.btn-primary {
-  background: var(--color-primary);
-  color: #fff;
-  padding: 9px 18px;
-  border-radius: var(--radius-sm);
-  font-weight: 600;
-  font-size: 13.5px;
-  transition: background var(--transition);
-}
+.btn-primary { background: var(--color-primary); color: #fff; padding: 9px 18px; border-radius: var(--radius-sm); font-weight: 600; font-size: 13.5px; transition: background var(--transition); }
 .btn-primary:hover { background: var(--color-primary-dark); }
-
-.btn-secondary {
-  background: #ede9fe;
-  color: var(--color-primary);
-  padding: 8px 14px;
-  border-radius: var(--radius-sm);
-  font-weight: 600;
-  font-size: 13px;
-  transition: background var(--transition);
-}
+.btn-secondary { background: #ede9fe; color: var(--color-primary); padding: 8px 14px; border-radius: var(--radius-sm); font-weight: 600; font-size: 13px; transition: background var(--transition); }
 .btn-secondary:hover { background: #ddd6fe; }
-
-.btn-ghost {
-  background: transparent;
-  color: var(--color-text-muted);
-  padding: 9px 14px;
-  border-radius: var(--radius-sm);
-  font-weight: 600;
-  font-size: 13.5px;
-  transition: background var(--transition);
-}
+.btn-ghost { background: transparent; color: var(--color-text-muted); padding: 9px 14px; border-radius: var(--radius-sm); font-weight: 600; font-size: 13.5px; transition: background var(--transition); }
 .btn-ghost:hover { background: var(--color-bg); }
-
-.btn-danger {
-  background: #fee2e2;
-  color: var(--color-danger);
-  padding: 9px 14px;
-  border-radius: var(--radius-sm);
-  font-weight: 600;
-  font-size: 13.5px;
-  transition: background var(--transition);
-}
+.btn-danger { background: #fee2e2; color: var(--color-danger); padding: 9px 14px; border-radius: var(--radius-sm); font-weight: 600; font-size: 13.5px; transition: background var(--transition); }
 .btn-danger:hover { background: #fecaca; }
 
 /* =============================================
@@ -612,23 +551,10 @@ label input, label select, label textarea { font-size: 14px; text-transform: non
   border-bottom: 1px solid var(--color-border);
 }
 .modal-header h3 { font-size: 16px; font-weight: 700; }
-.modal-close {
-  width: 28px; height: 28px;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 14px;
-  color: var(--color-text-muted);
-  transition: background var(--transition);
-}
+.modal-close { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; color: var(--color-text-muted); transition: background var(--transition); }
 .modal-close:hover { background: var(--color-bg); color: var(--color-text); }
 
-.modal-body {
-  padding: 18px 22px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
+.modal-body { padding: 18px 22px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
 
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
@@ -641,25 +567,10 @@ label input, label select, label textarea { font-size: 14px; text-transform: non
 }
 .footer-right { display: flex; gap: 8px; }
 
-/* Subtasks */
 .subtasks-section { display: flex; flex-direction: column; gap: 8px; }
 .subtasks-heading { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--color-text-muted); }
-.subtask-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 0;
-  border-bottom: 1px solid var(--color-border);
-}
-.subtask-check {
-  width: 16px; height: 16px;
-  border-radius: 4px;
-  border: 2px solid var(--color-border);
-  flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer;
-  transition: background var(--transition);
-}
+.subtask-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--color-border); }
+.subtask-check { width: 16px; height: 16px; border-radius: 4px; border: 2px solid var(--color-border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background var(--transition); }
 .subtask-check.checked { background: var(--color-success); border-color: var(--color-success); }
 .subtask-check.checked::after { content: '✓'; color: #fff; font-size: 9px; font-weight: 700; }
 .subtask-label { flex: 1; font-size: 13px; }
@@ -670,20 +581,13 @@ label input, label select, label textarea { font-size: 14px; text-transform: non
 .subtask-add-row { display: flex; gap: 8px; margin-top: 4px; }
 .subtask-add-row input { flex: 1; }
 
-/* Color swatches for project/category modals */
 .color-swatches { display: flex; gap: 8px; flex-wrap: wrap; padding: 4px 0; }
-.color-swatch {
-  width: 26px; height: 26px;
-  border-radius: 50%;
-  cursor: pointer;
-  border: 3px solid transparent;
-  transition: border-color var(--transition), transform var(--transition);
-}
+.color-swatch { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: border-color var(--transition), transform var(--transition); }
 .color-swatch:hover { transform: scale(1.15); }
 .color-swatch.selected { border-color: var(--color-text); }
 
 /* =============================================
-   Scrollbar (optional polish)
+   Scrollbar
    ============================================= */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
