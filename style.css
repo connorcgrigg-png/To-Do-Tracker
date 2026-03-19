@@ -837,3 +837,71 @@ label input, label select, label textarea { font-size: 14px; text-transform: non
   transition: background var(--transition);
 }
 .btn-archive:hover { background: rgba(245,158,11,.2); }
+
+/* =============================================
+   Archive collapsible sections
+   ============================================= */
+
+/* Remove native browser disclosure triangle */
+.archive-cat-details > summary,
+.archive-proj-details > summary {
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+}
+.archive-cat-details > summary::-webkit-details-marker,
+.archive-proj-details > summary::-webkit-details-marker { display: none; }
+
+/* Stack category sections with tighter spacing */
+.archive-cat-details { margin-bottom: 6px; }
+
+/* Cat-group-header used as summary: suppress bottom margin, square off bottom corners when open */
+.archive-cat-details > summary.cat-group-header { margin-bottom: 0; }
+.archive-cat-details[open] > summary.cat-group-header {
+  border-radius: 0 var(--radius-md) 0 0;
+}
+
+/* Archived item header (Restore button sections) */
+.archive-item-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.archive-cat-details[open] > summary.archive-item-header {
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  border-bottom: none;
+}
+.archive-item-section > summary.archive-item-header + .task-proj-subgroup {
+  border: 1.5px solid var(--color-border);
+  border-top: none;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  padding: 8px;
+  background: var(--color-bg);
+}
+
+/* Chevron rotates when open */
+.archive-chevron {
+  font-size: 10px;
+  opacity: 0.45;
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+details[open] > summary .archive-chevron { transform: rotate(90deg); }
+
+/* Project-level details inside a category */
+.archive-proj-details { border-bottom: 1px solid var(--color-border); }
+.archive-proj-details:last-child { border-bottom: none; }
+.archive-proj-details > summary.task-proj-subheader {
+  cursor: pointer;
+  margin-top: 0;
+  border-top: none;
+  border-bottom: none;
+  padding: 9px 12px;
+}
+.archive-proj-details > .task-proj-subgroup { padding: 0 8px 8px; }

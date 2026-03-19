@@ -1170,35 +1170,51 @@ function renderArchive() {
     container.appendChild(_archiveHeading(`Completed Tasks`, completedTasks.length));
 
     groupTasksByCategory(completedTasks).forEach(({ cat, tasks: catTasks }) => {
-      const section = document.createElement('div');
-      section.className = 'task-project-section';
-      const colors  = cat ? getCatColors(cat.name) : getCatColors(null);
-      const header  = document.createElement('div');
-      header.className = 'task-project-header cat-group-header';
-      header.style.background      = colors.bg;
-      header.style.borderLeftColor = colors.swatch;
-      header.innerHTML = `
-        <span class="task-project-name" style="color:${colors.text}">${cat ? escHtml(cat.name) : 'Uncategorized'}</span>
-        <span class="group-count" style="background:${colors.swatch};color:#fff;">${catTasks.length}</span>
-      `;
-      section.appendChild(header);
+      const colors = cat ? getCatColors(cat.name) : getCatColors(null);
+      const label  = cat ? escHtml(cat.name) : 'Uncategorized';
 
-      groupTasksByProject(catTasks).forEach(({ proj, tasks: projTasks }, idx) => {
-        const sub = document.createElement('div');
-        sub.className = 'task-proj-subheader' + (idx === 0 ? ' first' : '');
-        const pc = proj ? proj.color : 'var(--color-text-muted)';
-        sub.innerHTML = `
+      // Category-level collapsible
+      const catDetails = document.createElement('details');
+      catDetails.className = 'archive-cat-details';
+
+      const catSummary = document.createElement('summary');
+      catSummary.className = 'task-project-header cat-group-header';
+      catSummary.style.background      = colors.bg;
+      catSummary.style.borderLeftColor = colors.swatch;
+      catSummary.innerHTML = `
+        <span class="task-project-name" style="color:${colors.text}">${label}</span>
+        <span class="group-count" style="background:${colors.swatch};color:#fff;">${catTasks.length}</span>
+        <span class="archive-chevron">&#9656;</span>
+      `;
+      catDetails.appendChild(catSummary);
+
+      // Project-level collapsibles inside category
+      groupTasksByProject(catTasks).forEach(({ proj, tasks: projTasks }) => {
+        const pc       = proj ? proj.color : 'var(--color-text-muted)';
+        const projLabel = proj ? escHtml(proj.name) : 'No Project';
+
+        const projDetails = document.createElement('details');
+        projDetails.className = 'archive-proj-details';
+
+        const projSummary = document.createElement('summary');
+        projSummary.className = 'task-proj-subheader';
+        projSummary.innerHTML = `
           <span class="proj-dot" style="background:${pc}"></span>
-          <span style="color:${pc}">${proj ? escHtml(proj.name) : 'No Project'}</span>
+          <span style="color:${pc}">${projLabel}</span>
           <span class="subgroup-count">${projTasks.length}</span>
+          <span class="archive-chevron">&#9656;</span>
         `;
-        section.appendChild(sub);
+        projDetails.appendChild(projSummary);
+
         const wrap = document.createElement('div');
         wrap.className = 'task-proj-subgroup';
         projTasks.forEach(t => wrap.appendChild(buildTaskCard(t)));
-        section.appendChild(wrap);
+        projDetails.appendChild(wrap);
+
+        catDetails.appendChild(projDetails);
       });
-      container.appendChild(section);
+
+      container.appendChild(catDetails);
     });
   }
 
@@ -1236,11 +1252,11 @@ function _archiveHeading(label, count) {
 }
 
 function _archivedItemBlock(color, name, itemTasks, onRestore) {
-  const section = document.createElement('div');
-  section.className = 'task-project-section archive-item-section';
+  const details = document.createElement('details');
+  details.className = 'archive-cat-details archive-item-section';
 
-  const header = document.createElement('div');
-  header.className = 'task-project-header';
+  const summary = document.createElement('summary');
+  summary.className = 'task-project-header archive-item-header';
 
   const dot = document.createElement('span');
   dot.className = 'proj-dot';
@@ -1258,21 +1274,26 @@ function _archivedItemBlock(color, name, itemTasks, onRestore) {
   const restoreBtn = document.createElement('button');
   restoreBtn.className = 'restore-btn';
   restoreBtn.textContent = 'Restore';
-  restoreBtn.addEventListener('click', onRestore);
+  restoreBtn.addEventListener('click', e => { e.stopPropagation(); onRestore(); });
 
-  header.appendChild(dot);
-  header.appendChild(label);
-  header.appendChild(count);
-  header.appendChild(restoreBtn);
-  section.appendChild(header);
+  const chevron = document.createElement('span');
+  chevron.className = 'archive-chevron';
+  chevron.innerHTML = '&#9656;';
+
+  summary.appendChild(dot);
+  summary.appendChild(label);
+  summary.appendChild(count);
+  summary.appendChild(restoreBtn);
+  summary.appendChild(chevron);
+  details.appendChild(summary);
 
   if (itemTasks.length) {
     const wrap = document.createElement('div');
     wrap.className = 'task-proj-subgroup';
     itemTasks.forEach(t => wrap.appendChild(buildTaskCard(t)));
-    section.appendChild(wrap);
+    details.appendChild(wrap);
   }
-  return section;
+  return details;
 }
 
 // ══════════════════════════════════════════════
