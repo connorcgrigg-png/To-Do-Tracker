@@ -138,6 +138,14 @@ function weekStartStr() {
 }
 function isToday(dateStr) { return dateStr === todayStr(); }
 function isOverdue(dateStr) { return dateStr && dateStr < todayStr(); }
+
+/** Sort comparator: ascending by dueDate, tasks with no date sink to the bottom */
+function byDueDate(a, b) {
+  if (!a.dueDate && !b.dueDate) return 0;
+  if (!a.dueDate) return 1;
+  if (!b.dueDate) return -1;
+  return a.dueDate.localeCompare(b.dueDate);
+}
 function isDueSoon(dateStr) {
   // due within next 2 days but not overdue
   if (!dateStr || dateStr < todayStr()) return false;
@@ -297,16 +305,26 @@ function renderMainView() {
     case 'project': {
       const proj = projects.find(p => p.id === currentView.id);
       titleEl.textContent = proj ? proj.name : 'Project';
-      filteredTasks = tasks.filter(t => t.projectId === currentView.id);
+      const wkS = weekStartStr(), wkE = weekEndStr();
+      filteredTasks = tasks
+        .filter(t => t.projectId === currentView.id)
+        .filter(t => !t.completed || (t.completedAt?.slice(0,10) >= wkS && t.completedAt?.slice(0,10) <= wkE))
+        .sort(byDueDate);
       break;
     }
-    case 'category':
+    case 'category': {
       titleEl.textContent = currentView.id;
-      filteredTasks = tasks.filter(t => t.category === currentView.id);
+      const wkS = weekStartStr(), wkE = weekEndStr();
+      filteredTasks = tasks
+        .filter(t => t.category === currentView.id)
+        .filter(t => !t.completed || (t.completedAt?.slice(0,10) >= wkS && t.completedAt?.slice(0,10) <= wkE))
+        .sort(byDueDate);
       break;
+    }
   }
 
-  renderTaskGroups(filteredTasks);
+  const preSorted = currentView.type === 'project' || currentView.type === 'category';
+  renderTaskGroups(filteredTasks, 'project', preSorted);
 }
 
 // ══════════════════════════════════════════════
@@ -345,7 +363,7 @@ function groupTasksByProject(taskList) {
   return result;
 }
 
-function renderTaskGroups(taskList, groupBy = 'project') {
+function renderTaskGroups(taskList, groupBy = 'project', sortByDate = false) {
   const container = document.getElementById('task-groups');
   const emptyMsg  = document.getElementById('empty-msg');
   container.innerHTML = '';
@@ -387,11 +405,10 @@ function renderTaskGroups(taskList, groupBy = 'project') {
         `;
         section.appendChild(subHeader);
 
-        const pending   = projTasks.filter(t => !t.completed);
-        const completed = projTasks.filter(t => t.completed);
+        const ordered = sortByDate ? projTasks : [...projTasks.filter(t => !t.completed), ...projTasks.filter(t => t.completed)];
         const wrap = document.createElement('div');
         wrap.className = 'task-proj-subgroup';
-        [...pending, ...completed].forEach(t => wrap.appendChild(buildTaskCard(t)));
+        ordered.forEach(t => wrap.appendChild(buildTaskCard(t)));
         section.appendChild(wrap);
       });
 
@@ -416,9 +433,8 @@ function renderTaskGroups(taskList, groupBy = 'project') {
     `;
     section.appendChild(header);
 
-    const pending   = groupTasks.filter(t => !t.completed);
-    const completed = groupTasks.filter(t => t.completed);
-    [...pending, ...completed].forEach(t => section.appendChild(buildTaskCard(t)));
+    const ordered = sortByDate ? groupTasks : [...groupTasks.filter(t => !t.completed), ...groupTasks.filter(t => t.completed)];
+    ordered.forEach(t => section.appendChild(buildTaskCard(t)));
     container.appendChild(section);
   });
 }
