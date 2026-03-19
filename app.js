@@ -579,9 +579,9 @@ function renderWeekCalendar() {
 
   container.appendChild(grid);
 
-  // ── Future Tasks bucket — below the week grid ──
+  // ── Future Tasks bucket — below the week grid (includes undated tasks) ──
   const futureTasks = tasks.filter(t =>
-    !t.completed && t.dueDate && t.dueDate > weekEnd
+    !t.completed && (!t.dueDate || t.dueDate > weekEnd)
   );
   if (futureTasks.length) {
     container.appendChild(buildOutOfWeekBucket('Future Tasks', futureTasks, 'future'));
