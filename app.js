@@ -116,8 +116,9 @@ function todayStr() {
   return localDateStr(new Date());
 }
 function weekEndStr() {
-  const d = new Date();
-  d.setDate(d.getDate() + 7);
+  // Sunday of the current week (Mon-Sun), i.e. weekStart + 6
+  const d = new Date(weekStartStr() + 'T00:00:00');
+  d.setDate(d.getDate() + 6);
   return localDateStr(d);
 }
 /** Returns the Monday of the current week (local date) */
@@ -496,19 +497,22 @@ function renderWeekCalendar() {
     grid.appendChild(col);
   }
 
-  container.appendChild(grid);
-
-  // ── Older Incomplete Tasks bucket (overdue, before this week, not completed) ──
-  const weekStart = weekStartStr();
-  const weekEnd   = weekEndStr();
+  // ── Older Incomplete Tasks bucket — insert ABOVE the week grid ──
+  const weekStart  = weekStartStr();
+  const weekEnd    = weekEndStr();
   const olderTasks = tasks.filter(t =>
     !t.completed && t.dueDate && t.dueDate < weekStart
   );
   if (olderTasks.length) {
-    container.appendChild(buildOutOfWeekBucket('Older Incomplete Tasks', olderTasks, 'older'));
+    container.insertBefore(
+      buildOutOfWeekBucket('Older Incomplete Tasks', olderTasks, 'older'),
+      grid
+    );
   }
 
-  // ── Future Tasks bucket (due date beyond this week) ──
+  container.appendChild(grid);
+
+  // ── Future Tasks bucket — below the week grid ──
   const futureTasks = tasks.filter(t =>
     !t.completed && t.dueDate && t.dueDate > weekEnd
   );
