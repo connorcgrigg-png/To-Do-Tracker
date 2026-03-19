@@ -532,15 +532,12 @@ function renderWeekCalendar() {
     const dayTasks  = tasks.filter(t => t.dueDate === dateStr);
     const dayGroups = groupTasksByProject(dayTasks);
     dayGroups.forEach(({ proj: grpProj, tasks: grpTasks }) => {
-      // Project mini-header (only show when there are multiple project groups)
-      if (dayGroups.length > 1) {
-        const hdr = document.createElement('div');
-        hdr.className = 'week-proj-mini-header';
-        const dotColor  = grpProj ? grpProj.color : 'var(--color-text-muted)';
-        const nameColor = grpProj ? grpProj.color : 'var(--color-text-muted)';
-        hdr.innerHTML = `<span class="proj-dot" style="background:${dotColor}"></span><span style="color:${nameColor}">${grpProj ? escHtml(grpProj.name) : 'No Project'}</span>`;
-        tasksZone.appendChild(hdr);
-      }
+      const hdr = document.createElement('div');
+      hdr.className = 'week-proj-mini-header';
+      const dotColor  = grpProj ? grpProj.color : 'var(--color-text-muted)';
+      const nameColor = grpProj ? grpProj.color : 'var(--color-text-muted)';
+      hdr.innerHTML = `<span class="proj-dot" style="background:${dotColor}"></span><span style="color:${nameColor}">${grpProj ? escHtml(grpProj.name) : 'No Project'}</span>`;
+      tasksZone.appendChild(hdr);
       grpTasks.forEach(t => tasksZone.appendChild(buildWeekTaskCard(t)));
     });
 
@@ -1453,10 +1450,31 @@ function wireEvents() {
     if (e.key === 'Enter') { e.preventDefault(); saveCategory(); }
   });
 
+  // Alert bar close
+  document.getElementById('alert-close').addEventListener('click', () => {
+    document.getElementById('alert-bar').classList.add('hidden');
+  });
+
   // Escape closes any open modal
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') { closeTaskModal(); closeProjectModal(); closeCategoryModal(); }
   });
+}
+
+// ══════════════════════════════════════════════
+//   Alerts / Reminders
+// ══════════════════════════════════════════════
+function checkReminders() {
+  const overdueTasks = tasks.filter(t => !t.completed && isOverdue(t.dueDate));
+  const alertBar  = document.getElementById('alert-bar');
+  const alertText = document.getElementById('alert-text');
+
+  if (overdueTasks.length) {
+    alertText.textContent = `⚠ ${overdueTasks.length} overdue task${overdueTasks.length > 1 ? 's' : ''}`;
+    alertBar.classList.remove('hidden');
+  } else {
+    alertBar.classList.add('hidden');
+  }
 }
 
 // ══════════════════════════════════════════════
@@ -1469,6 +1487,8 @@ function init() {
   seedDemoData();
   wireEvents();
   renderAll();
+  checkReminders();
+  setInterval(checkReminders, 60_000);
 }
 
 document.addEventListener('DOMContentLoaded', init);
