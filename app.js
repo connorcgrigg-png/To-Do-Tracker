@@ -105,20 +105,27 @@ function getCatColors(categoryName) {
 // ══════════════════════════════════════════════
 //   Helpers — dates
 // ══════════════════════════════════════════════
+/** Returns YYYY-MM-DD in local time (not UTC) */
+function localDateStr(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
 function todayStr() {
-  return new Date().toISOString().slice(0, 10);
+  return localDateStr(new Date());
 }
 function weekEndStr() {
   const d = new Date();
   d.setDate(d.getDate() + 7);
-  return d.toISOString().slice(0, 10);
+  return localDateStr(d);
 }
-/** Returns the Monday of the current week (ISO) */
+/** Returns the Monday of the current week (local date) */
 function weekStartStr() {
   const d = new Date();
   const day = d.getDay() || 7;            // treat Sunday as 7
   d.setDate(d.getDate() - day + 1);
-  return d.toISOString().slice(0, 10);
+  return localDateStr(d);
 }
 function isToday(dateStr) { return dateStr === todayStr(); }
 function isOverdue(dateStr) { return dateStr && dateStr < todayStr(); }
@@ -127,7 +134,7 @@ function isDueSoon(dateStr) {
   if (!dateStr || dateStr < todayStr()) return false;
   const d = new Date();
   d.setDate(d.getDate() + 2);
-  return dateStr <= d.toISOString().slice(0, 10);
+  return dateStr <= localDateStr(d);
 }
 function isThisWeek(dateStr) {
   return dateStr && dateStr >= todayStr() && dateStr <= weekEndStr();
@@ -436,7 +443,7 @@ function renderWeekCalendar() {
   for (let i = 0; i < 7; i++) {
     const d = new Date(monDate);
     d.setDate(d.getDate() + i);
-    const dateStr      = d.toISOString().slice(0, 10);
+    const dateStr      = localDateStr(d);
     const isCurrentDay = dateStr === todayStr();
     const monthDay     = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
@@ -602,7 +609,7 @@ function renderDashboard() {
   for (let i = 0; i < 7; i++) {
     const d  = new Date(monDate);
     d.setDate(d.getDate() + i);
-    const ds  = d.toISOString().slice(0, 10);
+    const ds  = localDateStr(d);
     const cnt = tasks.filter(t => t.completed && t.completedAt && t.completedAt.slice(0,10) === ds).length;
     counts.push(cnt);
     if (cnt > maxCount) maxCount = cnt;
@@ -1038,11 +1045,11 @@ function seedDemoData() {
 
   const today        = todayStr();
   const yesterday    = new Date(); yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = yesterday.toISOString().slice(0, 10);
+  const yesterdayStr = localDateStr(yesterday);
   const tomorrow     = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
-  const tomorrowStr  = tomorrow.toISOString().slice(0, 10);
+  const tomorrowStr  = localDateStr(tomorrow);
   const in3          = new Date(); in3.setDate(in3.getDate() + 3);
-  const in3Str       = in3.toISOString().slice(0, 10);
+  const in3Str       = localDateStr(in3);
 
   tasks.push(
     {
