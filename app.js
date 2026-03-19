@@ -143,6 +143,20 @@ function weekStartStr() {
 function isToday(dateStr) { return dateStr === todayStr(); }
 function isOverdue(dateStr) { return dateStr && dateStr < todayStr(); }
 
+/**
+ * Returns true if a completed task should appear in the project/category view.
+ * Keeps it if it was completed this week (completedAt) OR is due this week (dueDate).
+ * Incomplete tasks are always shown — this predicate is only for completed ones.
+ */
+function completedIsThisWeek(t) {
+  const wkS = weekStartStr();
+  const wkE = weekEndStr();
+  const cd = localDateOfISO(t.completedAt);
+  if (cd && cd >= wkS && cd <= wkE) return true;
+  if (t.dueDate && t.dueDate >= wkS && t.dueDate <= wkE) return true;
+  return false;
+}
+
 /** Sort comparator: ascending by dueDate, tasks with no date sink to the bottom */
 function byDueDate(a, b) {
   if (!a.dueDate && !b.dueDate) return 0;
@@ -309,27 +323,17 @@ function renderMainView() {
     case 'project': {
       const proj = projects.find(p => p.id === currentView.id);
       titleEl.textContent = proj ? proj.name : 'Project';
-      const wkS = weekStartStr(), wkE = weekEndStr();
       filteredTasks = tasks
         .filter(t => t.projectId === currentView.id)
-        .filter(t => {
-          if (!t.completed) return true;
-          const cd = localDateOfISO(t.completedAt);
-          return cd !== null && cd >= wkS && cd <= wkE;
-        })
+        .filter(t => !t.completed || completedIsThisWeek(t))
         .sort(byDueDate);
       break;
     }
     case 'category': {
       titleEl.textContent = currentView.id;
-      const wkS = weekStartStr(), wkE = weekEndStr();
       filteredTasks = tasks
         .filter(t => t.category === currentView.id)
-        .filter(t => {
-          if (!t.completed) return true;
-          const cd = localDateOfISO(t.completedAt);
-          return cd !== null && cd >= wkS && cd <= wkE;
-        })
+        .filter(t => !t.completed || completedIsThisWeek(t))
         .sort(byDueDate);
       break;
     }
