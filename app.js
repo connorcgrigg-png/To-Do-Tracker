@@ -321,16 +321,19 @@ function renderMainView() {
     case 'project': {
       const proj = projects.find(p => p.id === currentView.id);
       titleEl.textContent = proj ? proj.name : 'Project';
-      filteredTasks = tasks
-        .filter(t => t.projectId === currentView.id)
+      const _projAll = tasks.filter(t => t.projectId === currentView.id);
+      console.log('[project view] all tasks for project:', _projAll.map(t => ({ title: t.title, completed: t.completed, completedAt: t.completedAt, dueDate: t.dueDate })));
+      filteredTasks = _projAll
         .filter(t => !t.completed || completedIsThisWeek(t))
         .sort(byDueDate);
+      console.log('[project view] after filter:', filteredTasks.map(t => t.title));
       break;
     }
     case 'category': {
       titleEl.textContent = currentView.id;
-      filteredTasks = tasks
-        .filter(t => t.category === currentView.id)
+      const _catAll = tasks.filter(t => t.category === currentView.id);
+      console.log('[category view] all tasks for category:', _catAll.map(t => ({ title: t.title, completed: t.completed, completedAt: t.completedAt })));
+      filteredTasks = _catAll
         .filter(t => !t.completed || completedIsThisWeek(t))
         .sort(byDueDate);
       break;
@@ -381,7 +384,9 @@ function renderTaskGroups(taskList, groupBy = 'project', sortByDate = false) {
   // In project/category views, always strip completed tasks from outside the current week,
   // regardless of how this function was called.
   if (currentView.type === 'project' || currentView.type === 'category') {
+    const before = taskList.length;
     taskList = taskList.filter(t => !t.completed || completedIsThisWeek(t));
+    console.log('[renderTaskGroups safety net] removed', before - taskList.length, 'old completed tasks; weekStart:', weekStartStr());
   }
 
   const container = document.getElementById('task-groups');
