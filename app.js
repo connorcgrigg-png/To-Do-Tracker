@@ -112,6 +112,14 @@ function localDateStr(d) {
   const day = String(d.getDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
 }
+/** Converts an ISO timestamp OR a YYYY-MM-DD string to a local YYYY-MM-DD string.
+ *  Handles old data that stored completedAt as UTC ISO. */
+function localDateOfISO(isoStr) {
+  if (!isoStr) return null;
+  // Already a date-only string — use directly (no UTC conversion needed)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(isoStr)) return isoStr;
+  return localDateStr(new Date(isoStr));
+}
 function todayStr() {
   return localDateStr(new Date());
 }
@@ -674,9 +682,11 @@ function renderDashboard() {
   const wkStart = weekStartStr();
   const wkEnd   = weekEndStr();
 
-  const completedThisWeek = tasks.filter(t =>
-    t.completed && t.completedAt && t.completedAt >= wkStart && t.completedAt <= wkEnd
-  ).length;
+  const completedThisWeek = tasks.filter(t => {
+    if (!t.completed || !t.completedAt) return false;
+    const ds = localDateOfISO(t.completedAt);
+    return ds >= wkStart && ds <= wkEnd;
+  }).length;
   const pendingToday = tasks.filter(t => !t.completed && isToday(t.dueDate)).length;
   const overdueCnt   = tasks.filter(t => !t.completed && isOverdue(t.dueDate)).length;
   const totalOpen    = tasks.filter(t => !t.completed).length;
@@ -722,7 +732,7 @@ function renderDashboard() {
     const d  = new Date(monDate);
     d.setDate(d.getDate() + i);
     const ds  = localDateStr(d);
-    const cnt = tasks.filter(t => t.completed && t.completedAt && t.completedAt.slice(0,10) === ds).length;
+    const cnt = tasks.filter(t => t.completed && t.completedAt && localDateOfISO(t.completedAt) === ds).length;
     counts.push(cnt);
     if (cnt > maxCount) maxCount = cnt;
   }
@@ -752,7 +762,7 @@ function toggleComplete(taskId) {
   const task = tasks.find(t => t.id === taskId);
   if (!task) return;
   task.completed   = !task.completed;
-  task.completedAt = task.completed ? new Date().toISOString() : null;
+  task.completedAt = task.completed ? todayStr() : null;
   saveData();
   renderAll();
 }
@@ -1350,7 +1360,7 @@ function seedDemoData() {
     {
       id: uid(), title: 'Gym session', projectId: p2.id, category: 'Health',
       dueDate: today, notes: 'Leg day', completed: true,
-      completedAt: new Date().toISOString(),
+      completedAt: today,
       createdAt: new Date().toISOString(), subtasks: [],
     },
     {
