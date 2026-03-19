@@ -281,11 +281,19 @@ function renderMainView() {
 
   let filteredTasks = [];
   switch (currentView.type) {
-    case 'today':
+    case 'today': {
       titleEl.textContent = 'Today';
-      filteredTasks = tasks.filter(t => isToday(t.dueDate));
-      renderTaskGroups(filteredTasks, 'category');
+      const todayTasks   = tasks.filter(t => isToday(t.dueDate));
+      const undatedTasks = tasks.filter(t => !t.completed && !t.dueDate);
+      renderTaskGroups(todayTasks, 'category');
+      // Append unscheduled bucket below the regular groups
+      if (undatedTasks.length) {
+        document.getElementById('empty-msg').classList.add('hidden');
+        document.getElementById('task-groups')
+          .appendChild(buildOutOfWeekBucket('No Due Date', undatedTasks, 'future'));
+      }
       return;
+    }
     case 'week':
       titleEl.textContent = 'This Week';
       renderWeekCalendar();
