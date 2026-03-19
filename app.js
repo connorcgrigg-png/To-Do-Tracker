@@ -434,9 +434,6 @@ function renderWeekCalendar() {
   const emptyMsg  = document.getElementById('empty-msg');
   container.innerHTML = '';
   emptyMsg.classList.add('hidden');
-  try { _renderWeekCalendarInner(container); } catch(e) { container.innerHTML = `<p style="color:red;padding:16px">Week view error: ${e.message}</p>`; console.error(e); }
-}
-function _renderWeekCalendarInner(container) {
 
   const monDate  = new Date(weekStartStr() + 'T00:00:00');
   const dayNames = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
