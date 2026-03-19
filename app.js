@@ -497,17 +497,14 @@ function renderWeekCalendar() {
     grid.appendChild(col);
   }
 
-  // ── Older Incomplete Tasks bucket — insert ABOVE the week grid ──
+  // ── Older Incomplete Tasks bucket — appears ABOVE the week grid ──
   const weekStart  = weekStartStr();
   const weekEnd    = weekEndStr();
   const olderTasks = tasks.filter(t =>
     !t.completed && t.dueDate && t.dueDate < weekStart
   );
   if (olderTasks.length) {
-    container.insertBefore(
-      buildOutOfWeekBucket('Older Incomplete Tasks', olderTasks, 'older'),
-      grid
-    );
+    container.appendChild(buildOutOfWeekBucket('Older Incomplete Tasks', olderTasks, 'older'));
   }
 
   container.appendChild(grid);
