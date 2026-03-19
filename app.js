@@ -59,6 +59,10 @@ function loadData() {
   } catch(e) {
     tasks = []; projects = []; categories = [];
   }
+  // Normalise legacy tasks: ensure completed tasks always have a completedAt date string
+  tasks.forEach(t => {
+    if (t.completed && !t.completedAt) t.completedAt = '1970-01-01';
+  });
 }
 
 function saveData() {
@@ -308,7 +312,11 @@ function renderMainView() {
       const wkS = weekStartStr(), wkE = weekEndStr();
       filteredTasks = tasks
         .filter(t => t.projectId === currentView.id)
-        .filter(t => !t.completed || (t.completedAt?.slice(0,10) >= wkS && t.completedAt?.slice(0,10) <= wkE))
+        .filter(t => {
+          if (!t.completed) return true;
+          const cd = localDateOfISO(t.completedAt);
+          return cd !== null && cd >= wkS && cd <= wkE;
+        })
         .sort(byDueDate);
       break;
     }
@@ -317,7 +325,11 @@ function renderMainView() {
       const wkS = weekStartStr(), wkE = weekEndStr();
       filteredTasks = tasks
         .filter(t => t.category === currentView.id)
-        .filter(t => !t.completed || (t.completedAt?.slice(0,10) >= wkS && t.completedAt?.slice(0,10) <= wkE))
+        .filter(t => {
+          if (!t.completed) return true;
+          const cd = localDateOfISO(t.completedAt);
+          return cd !== null && cd >= wkS && cd <= wkE;
+        })
         .sort(byDueDate);
       break;
     }
