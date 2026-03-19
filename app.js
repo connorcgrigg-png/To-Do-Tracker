@@ -345,7 +345,7 @@ function renderTaskGroups(taskList, groupBy = 'project') {
   emptyMsg.classList.add('hidden');
 
   if (groupBy === 'category') {
-    groupTasksByCategory(taskList).forEach(({ cat, tasks: groupTasks }) => {
+    groupTasksByCategory(taskList).forEach(({ cat, tasks: catTasks }) => {
       const section = document.createElement('div');
       section.className = 'task-project-section';
 
@@ -357,13 +357,32 @@ function renderTaskGroups(taskList, groupBy = 'project') {
       header.innerHTML = `
         <span class="proj-dot" style="background:${swatchClr}"></span>
         <span class="task-project-name" style="color:${swatchClr}">${label}</span>
-        <span class="group-count">${groupTasks.length}</span>
+        <span class="group-count">${catTasks.length}</span>
       `;
       section.appendChild(header);
 
-      const pending   = groupTasks.filter(t => !t.completed);
-      const completed = groupTasks.filter(t => t.completed);
-      [...pending, ...completed].forEach(t => section.appendChild(buildTaskCard(t)));
+      // Within each category, sub-group by project
+      const projGroups = groupTasksByProject(catTasks);
+      projGroups.forEach(({ proj, tasks: projTasks }, idx) => {
+        const subHeader = document.createElement('div');
+        subHeader.className = 'task-proj-subheader' + (idx === 0 ? ' first' : '');
+        const projColor = proj ? proj.color : 'var(--color-text-muted)';
+        const projLabel = proj ? escHtml(proj.name) : 'No Project';
+        subHeader.innerHTML = `
+          <span class="proj-dot" style="background:${projColor}"></span>
+          <span style="color:${projColor}">${projLabel}</span>
+          <span class="subgroup-count">${projTasks.length}</span>
+        `;
+        section.appendChild(subHeader);
+
+        const pending   = projTasks.filter(t => !t.completed);
+        const completed = projTasks.filter(t => t.completed);
+        const wrap = document.createElement('div');
+        wrap.className = 'task-proj-subgroup';
+        [...pending, ...completed].forEach(t => wrap.appendChild(buildTaskCard(t)));
+        section.appendChild(wrap);
+      });
+
       container.appendChild(section);
     });
     return;
