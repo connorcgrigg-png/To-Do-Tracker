@@ -1296,35 +1296,6 @@ function _archivedItemBlock(color, name, itemTasks, onRestore) {
   return details;
 }
 
-// ══════════════════════════════════════════════
-//   Alerts / Reminders
-// ══════════════════════════════════════════════
-function checkReminders() {
-  const overdueTasks = tasks.filter(t => !t.completed && isOverdue(t.dueDate));
-  const dueSoonTasks = tasks.filter(t => !t.completed && isDueSoon(t.dueDate) && !isToday(t.dueDate));
-  const alertBar  = document.getElementById('alert-bar');
-  const alertText = document.getElementById('alert-text');
-
-  if (overdueTasks.length || dueSoonTasks.length) {
-    const parts = [];
-    if (overdueTasks.length) parts.push(`${overdueTasks.length} overdue task${overdueTasks.length > 1 ? 's' : ''}`);
-    if (dueSoonTasks.length) parts.push(`${dueSoonTasks.length} due soon`);
-    alertText.textContent = '⚠ ' + parts.join(' · ');
-    alertBar.classList.remove('hidden');
-
-    if (!sessionStorage.getItem('notified') && Notification.permission === 'granted') {
-      new Notification('Planner Reminder', {
-        body: parts.join(', '),
-        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><text y="28" font-size="28">✓</text></svg>',
-      });
-      sessionStorage.setItem('notified', '1');
-    } else if (!sessionStorage.getItem('notified') && Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
-  } else {
-    alertBar.classList.add('hidden');
-  }
-}
 
 // ══════════════════════════════════════════════
 //   Utility
@@ -1482,11 +1453,6 @@ function wireEvents() {
     if (e.key === 'Enter') { e.preventDefault(); saveCategory(); }
   });
 
-  // Alert bar close
-  document.getElementById('alert-close').addEventListener('click', () => {
-    document.getElementById('alert-bar').classList.add('hidden');
-  });
-
   // Escape closes any open modal
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') { closeTaskModal(); closeProjectModal(); closeCategoryModal(); }
@@ -1503,8 +1469,6 @@ function init() {
   seedDemoData();
   wireEvents();
   renderAll();
-  checkReminders();
-  setInterval(checkReminders, 60_000);
 }
 
 document.addEventListener('DOMContentLoaded', init);

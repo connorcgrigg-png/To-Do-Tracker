@@ -250,20 +250,6 @@ label input, label select, label textarea { font-size: 14px; text-transform: non
 }
 #view-title { font-size: 20px; font-weight: 700; }
 
-.alert-bar {
-  background: #fef3c7;
-  border-bottom: 1.5px solid var(--color-warning);
-  padding: 10px 28px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  font-size: 13px;
-  color: #92400e;
-}
-.alert-bar #alert-close { font-size: 16px; color: #92400e; opacity: .7; }
-.alert-bar #alert-close:hover { opacity: 1; }
-
 /* =============================================
    View content area
    ============================================= */
