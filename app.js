@@ -361,15 +361,15 @@ function renderTaskGroups(taskList, groupBy = 'project') {
       const section = document.createElement('div');
       section.className = 'task-project-section';
 
-      const colors    = cat ? getCatColors(cat.name) : getCatColors(null);
-      const swatchClr = cat ? (colors.swatch || colors.text) : 'var(--color-text-muted)';
-      const label     = cat ? escHtml(cat.name) : 'Uncategorized';
-      const header    = document.createElement('div');
-      header.className = 'task-project-header';
+      const colors = cat ? getCatColors(cat.name) : getCatColors(null);
+      const label  = cat ? escHtml(cat.name) : 'Uncategorized';
+      const header = document.createElement('div');
+      header.className = 'task-project-header cat-group-header';
+      header.style.background      = colors.bg;
+      header.style.borderLeftColor = colors.swatch;
       header.innerHTML = `
-        <span class="proj-dot" style="background:${swatchClr}"></span>
-        <span class="task-project-name" style="color:${swatchClr}">${label}</span>
-        <span class="group-count">${catTasks.length}</span>
+        <span class="task-project-name" style="color:${colors.text}">${label}</span>
+        <span class="group-count" style="background:${colors.swatch};color:#fff;">${catTasks.length}</span>
       `;
       section.appendChild(header);
 
@@ -1170,16 +1170,16 @@ function renderArchive() {
     container.appendChild(_archiveHeading(`Completed Tasks`, completedTasks.length));
 
     groupTasksByCategory(completedTasks).forEach(({ cat, tasks: catTasks }) => {
-      const section   = document.createElement('div');
+      const section = document.createElement('div');
       section.className = 'task-project-section';
-      const colors    = cat ? getCatColors(cat.name) : getCatColors(null);
-      const swatch    = cat ? (colors.swatch || colors.text) : 'var(--color-text-muted)';
-      const header    = document.createElement('div');
-      header.className = 'task-project-header';
+      const colors  = cat ? getCatColors(cat.name) : getCatColors(null);
+      const header  = document.createElement('div');
+      header.className = 'task-project-header cat-group-header';
+      header.style.background      = colors.bg;
+      header.style.borderLeftColor = colors.swatch;
       header.innerHTML = `
-        <span class="proj-dot" style="background:${swatch}"></span>
-        <span class="task-project-name" style="color:${swatch}">${cat ? escHtml(cat.name) : 'Uncategorized'}</span>
-        <span class="group-count">${catTasks.length}</span>
+        <span class="task-project-name" style="color:${colors.text}">${cat ? escHtml(cat.name) : 'Uncategorized'}</span>
+        <span class="group-count" style="background:${colors.swatch};color:#fff;">${catTasks.length}</span>
       `;
       section.appendChild(header);
 

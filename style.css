@@ -272,8 +272,9 @@ label input, label select, label textarea { font-size: 14px; text-transform: non
 /* =============================================
    Project section headers (list view grouping)
    ============================================= */
-.task-project-section { margin-bottom: 28px; }
+.task-project-section { margin-bottom: 34px; }
 
+/* Default project-level header (project view, week buckets) */
 .task-project-header {
   display: flex;
   align-items: center;
@@ -298,23 +299,48 @@ label input, label select, label textarea { font-size: 14px; text-transform: non
   margin-left: 2px;
 }
 
-/* Project sub-headers inside a category section (Today view) */
+/* ── Category-level banner header (Today + Archive views) ── */
+.cat-group-header {
+  /* border-left color + background set inline from category palette */
+  border-left: 5px solid transparent;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  padding: 11px 18px 11px 14px;
+  margin-bottom: 14px;
+  gap: 10px;
+}
+.cat-group-header .task-project-name {
+  font-size: 13px;
+  letter-spacing: .06em;
+}
+/* The badge inside a cat-group-header uses inline bg/color; reset defaults */
+.cat-group-header .group-count {
+  background: transparent;
+  color: inherit;
+  padding: 2px 9px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-left: auto;
+}
+
+/* Project sub-headers inside a category section (Today / Archive views) */
 .task-proj-subheader {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 10px 4px 6px;
-  margin-top: 6px;
+  padding: 9px 4px 6px 6px;
+  margin-top: 8px;
   border-top: 1px solid var(--color-border);
   font-size: 11px;
   font-weight: 700;
 }
 .task-proj-subheader.first {
-  margin-top: 0;
+  margin-top: 2px;
   border-top: none;
-  padding-top: 2px;
+  padding-top: 4px;
 }
 .task-proj-subheader .proj-dot { width: 7px; height: 7px; }
+.task-proj-subgroup { padding-left: 2px; }
 .subgroup-count {
   background: var(--color-border);
   color: var(--color-text-muted);
