@@ -402,6 +402,7 @@ function buildTaskCard(task) {
   let indicator = '';
   if (overdue)                indicator = `<span class="indicator overdue">Overdue</span>`;
   else if (dueSoon && !today) indicator = `<span class="indicator due-soon">Soon</span>`;
+  if (task.priority)          indicator += `<span class="indicator priority" title="High priority">!</span>`;
 
   card.innerHTML = `
     <div class="task-check${task.completed ? ' checked' : ''}" data-id="${task.id}" role="checkbox" aria-checked="${task.completed}"></div>
@@ -557,7 +558,6 @@ function buildOutOfWeekBucket(title, taskList, variant) {
 function buildWeekTaskCard(task) {
   const card    = document.createElement('div');
   const overdue = !task.completed && isOverdue(task.dueDate);
-  const dueSoon = !task.completed && isDueSoon(task.dueDate);
 
   let cls = 'week-task-card';
   if (task.completed) cls += ' completed';
@@ -576,22 +576,18 @@ function buildWeekTaskCard(task) {
   } else if (proj) {
     card.style.borderLeftColor = proj.color;
     card.style.borderLeftWidth = '5px';
-  } else if (dueSoon) {
-    card.style.borderLeftColor = '#f59e0b';
-    card.style.borderLeftWidth = '5px';
   }
 
-  // Urgency pill (text-only indicator since labels are removed from week cards)
-  let urgencyHtml = '';
-  if (overdue)  urgencyHtml = `<span style="font-size:10px;font-weight:700;color:#ef4444;">Overdue</span>`;
-  else if (dueSoon) urgencyHtml = `<span style="font-size:10px;font-weight:700;color:#f59e0b;">Soon</span>`;
+  const overdueHtml  = overdue ? `<div style="margin-top:4px;"><span style="font-size:10px;font-weight:700;color:#ef4444;">Overdue</span></div>` : '';
+  const priorityHtml = task.priority ? `<span class="priority-bang" title="High priority">!</span>` : '';
 
   card.innerHTML = `
     <div class="task-check${task.completed ? ' checked' : ''}" data-id="${task.id}" role="checkbox" aria-checked="${task.completed}"></div>
     <div class="week-card-body">
       <div class="task-title" style="color:${catColors.text};">${escHtml(task.title)}</div>
-      ${urgencyHtml ? `<div style="margin-top:4px;">${urgencyHtml}</div>` : ''}
+      ${overdueHtml}
     </div>
+    ${priorityHtml}
   `;
 
   card.querySelector('.task-check').addEventListener('click', e => {
@@ -725,7 +721,8 @@ function openTaskModal(taskId = null) {
     document.getElementById('task-project').value  = task.projectId || '';
     document.getElementById('task-category').value = task.category  || (categories[0] ? categories[0].name : '');
     document.getElementById('task-due').value       = task.dueDate  || '';
-    document.getElementById('task-notes').value     = task.notes    || '';
+    document.getElementById('task-notes').value       = task.notes    || '';
+    document.getElementById('task-priority').checked  = task.priority || false;
     modalSubtasks = (task.subtasks || []).map(s => ({ ...s }));
     delBtn.classList.remove('hidden');
   } else {
@@ -735,6 +732,7 @@ function openTaskModal(taskId = null) {
     document.getElementById('task-category').value = currentView.type === 'category' ? currentView.id : (categories[0] ? categories[0].name : '');
     document.getElementById('task-due').value       = currentView.type === 'today' ? todayStr() : '';
     document.getElementById('task-notes').value     = '';
+    document.getElementById('task-priority').checked = false;
     modalSubtasks = [];
     delBtn.classList.add('hidden');
   }
@@ -805,6 +803,7 @@ function saveTaskFromModal() {
     dueDate:   document.getElementById('task-due').value || null,
     notes:     document.getElementById('task-notes').value.trim(),
     subtasks:  modalSubtasks.map(s => ({ ...s })),
+    priority:  document.getElementById('task-priority').checked,
   };
 
   if (editingTaskId) {
