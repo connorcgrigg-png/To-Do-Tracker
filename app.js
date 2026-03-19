@@ -497,6 +497,60 @@ function renderWeekCalendar() {
   }
 
   container.appendChild(grid);
+
+  // ── Older Incomplete Tasks bucket (overdue, before this week, not completed) ──
+  const weekStart = weekStartStr();
+  const weekEnd   = weekEndStr();
+  const olderTasks = tasks.filter(t =>
+    !t.completed && t.dueDate && t.dueDate < weekStart
+  );
+  if (olderTasks.length) {
+    container.appendChild(buildOutOfWeekBucket('Older Incomplete Tasks', olderTasks, 'older'));
+  }
+
+  // ── Future Tasks bucket (due date beyond this week) ──
+  const futureTasks = tasks.filter(t =>
+    !t.completed && t.dueDate && t.dueDate > weekEnd
+  );
+  if (futureTasks.length) {
+    container.appendChild(buildOutOfWeekBucket('Future Tasks', futureTasks, 'future'));
+  }
+}
+
+function buildOutOfWeekBucket(title, taskList, variant) {
+  const section = document.createElement('div');
+  section.className = `out-of-week-bucket out-of-week-bucket--${variant}`;
+
+  const header = document.createElement('div');
+  header.className = 'out-of-week-header';
+  header.innerHTML = `<span class="out-of-week-title">${title}</span><span class="out-of-week-count">${taskList.length}</span>`;
+  section.appendChild(header);
+
+  const cardRow = document.createElement('div');
+  cardRow.className = 'out-of-week-cards';
+
+  const groups = groupTasksByProject(taskList);
+  groups.forEach(({ proj: grpProj, tasks: grpTasks }) => {
+    if (groups.length > 1) {
+      const hdr = document.createElement('div');
+      hdr.className = 'week-proj-mini-header';
+      const dotColor = grpProj ? grpProj.color : 'var(--color-text-muted)';
+      hdr.innerHTML = `<span class="proj-dot" style="background:${dotColor}"></span><span style="color:${dotColor}">${grpProj ? escHtml(grpProj.name) : 'No Project'}</span>`;
+      cardRow.appendChild(hdr);
+    }
+    grpTasks.forEach(t => {
+      const card = buildWeekTaskCard(t);
+      // Show the due date on each card so user knows when it was/is due
+      const dueLabel = document.createElement('div');
+      dueLabel.style.cssText = 'font-size:10px;color:var(--color-text-muted);margin-top:3px;';
+      dueLabel.textContent = fmtDate(t.dueDate);
+      card.querySelector('.week-card-body')?.appendChild(dueLabel);
+      cardRow.appendChild(card);
+    });
+  });
+
+  section.appendChild(cardRow);
+  return section;
 }
 
 function buildWeekTaskCard(task) {

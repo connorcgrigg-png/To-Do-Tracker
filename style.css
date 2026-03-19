@@ -462,6 +462,58 @@ label input, label select, label textarea { font-size: 14px; text-transform: non
 .week-proj-mini-header:first-child { margin-top: 0; }
 .week-proj-mini-header .proj-dot { width: 7px; height: 7px; }
 
+/* Out-of-week buckets (Older Incomplete / Future Tasks) */
+.out-of-week-bucket {
+  margin-top: 18px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.out-of-week-bucket--older { border-color: #ef444433; }
+.out-of-week-bucket--future { border-color: #3b82f633; }
+
+.out-of-week-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: var(--color-surface);
+  border-bottom: 1.5px solid var(--color-border);
+}
+.out-of-week-bucket--older .out-of-week-header { background: #ef444408; border-bottom-color: #ef444433; }
+.out-of-week-bucket--future .out-of-week-header { background: #3b82f608; border-bottom-color: #3b82f633; }
+
+.out-of-week-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+.out-of-week-bucket--older .out-of-week-title { color: #ef4444bb; }
+.out-of-week-bucket--future .out-of-week-title { color: #3b82f6bb; }
+
+.out-of-week-count {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 99px;
+  background: var(--color-border);
+  color: var(--color-text-muted);
+}
+.out-of-week-bucket--older .out-of-week-count { background: #ef444420; color: #ef4444; }
+.out-of-week-bucket--future .out-of-week-count { background: #3b82f620; color: #3b82f6; }
+
+.out-of-week-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 14px;
+  background: var(--color-bg);
+}
+.out-of-week-cards .week-task-card { width: 180px; flex-shrink: 0; }
+.out-of-week-cards .week-proj-mini-header { width: 100%; margin-bottom: -2px; }
+
 /* Week task cards */
 .week-task-card {
   border-radius: var(--radius-sm);
