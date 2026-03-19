@@ -190,6 +190,46 @@ label input, label select, label textarea { font-size: 14px; text-transform: non
 
 .proj-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 
+/* Projects nested under a category in the sidebar */
+.cat-proj-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-sidebar);
+  font-size: 12.5px;
+  transition: background var(--transition);
+  position: relative;
+}
+.cat-proj-item:hover { background: var(--color-sidebar-hover); color: #fff; }
+.cat-proj-item.active { background: var(--color-sidebar-active); color: #fff; }
+
+.cat-proj-main {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: 1;
+  padding: 5px 10px 5px 22px;  /* indented */
+  text-align: left;
+  color: inherit;
+  font-size: inherit;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.cat-proj-item .item-actions { padding-right: 6px; }
+.cat-proj-item:hover .item-actions { display: flex; }
+
+.cat-add-proj-btn {
+  width: 100%;
+  padding: 4px 10px 5px 22px;
+  text-align: left;
+  font-size: 11px;
+  color: rgba(201,209,224,.35);
+  transition: color var(--transition);
+}
+.cat-add-proj-btn:hover { color: rgba(201,209,224,.75); }
+
 /* =============================================
    Main content
    ============================================= */

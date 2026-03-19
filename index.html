@@ -31,13 +31,6 @@
   </section>
 
   <section class="nav-section">
-    <p class="nav-label">Projects
-      <button class="add-inline-btn" id="add-project-btn" title="Add project">+</button>
-    </p>
-    <div id="projects-nav"></div>
-  </section>
-
-  <section class="nav-section">
     <p class="nav-label">Categories
       <button class="add-inline-btn" id="add-category-btn" title="Add category">+</button>
     </p>
@@ -161,6 +154,11 @@
     <div class="modal-body">
       <label>Project Name <span class="required">*</span>
         <input type="text" id="project-name-input" placeholder="My Project" autocomplete="off" />
+      </label>
+      <label>Category
+        <select id="project-category-input">
+          <!-- Populated dynamically -->
+        </select>
       </label>
       <label>Color
         <div id="color-swatches" class="color-swatches"></div>

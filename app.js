@@ -40,12 +40,13 @@ let categories = [];
 let currentView = { type: 'today', id: null };  // type: today|week|dashboard|project|category
 
 // editing state
-let editingTaskId      = null;
-let editingProjectId   = null;
-let editingCategoryId  = null;
-let modalSubtasks      = [];
-let selectedProjColor  = PROJECT_COLORS[0];
-let selectedCatColorIdx = 0;
+let editingTaskId        = null;
+let editingProjectId     = null;
+let editingCategoryId    = null;
+let modalSubtasks        = [];
+let selectedProjColor    = PROJECT_COLORS[0];
+let selectedCatColorIdx  = 0;
+let selectedProjCatId    = null;   // categoryId chosen in project modal
 
 // ══════════════════════════════════════════════
 //   Persistence
@@ -79,6 +80,19 @@ function seedCategories() {
   ];
   categories = defaults.map(d => ({ id: uid(), name: d.name, colorIdx: d.colorIdx }));
   saveData();
+}
+
+// Migrate projects created before categoryId existed — assign to first category
+function migrateProjects() {
+  if (!categories.length || !projects.length) return;
+  let changed = false;
+  projects.forEach(p => {
+    if (!p.categoryId) {
+      p.categoryId = categories[0].id;
+      changed = true;
+    }
+  });
+  if (changed) saveData();
 }
 
 // ── Category colour helper ─────────────────────
@@ -142,69 +156,77 @@ function renderSidebar() {
   document.getElementById('badge-today').textContent = todayCount || '';
   document.getElementById('badge-week').textContent  = weekCount  || '';
 
-  // Projects list
-  const projNav = document.getElementById('projects-nav');
-  projNav.innerHTML = '';
-  projects.forEach(p => {
-    const item = document.createElement('div');
-    item.className = 'proj-nav-item' + (currentView.type === 'project' && currentView.id === p.id ? ' active' : '');
-
-    const main = document.createElement('button');
-    main.className = 'proj-nav-main';
-    main.innerHTML = `<span class="proj-dot" style="background:${p.color}"></span><span class="item-label">${escHtml(p.name)}</span>`;
-    main.addEventListener('click', () => setView('project', p.id));
-
-    const actions = document.createElement('div');
-    actions.className = 'item-actions';
-    const editBtn = document.createElement('button');
-    editBtn.className = 'item-action-btn';
-    editBtn.title = 'Edit';
-    editBtn.innerHTML = '&#9998;';
-    editBtn.addEventListener('click', e => { e.stopPropagation(); openProjectModal(p.id); });
-    const delBtn = document.createElement('button');
-    delBtn.className = 'item-action-btn del';
-    delBtn.title = 'Delete';
-    delBtn.innerHTML = '&#x2715;';
-    delBtn.addEventListener('click', e => { e.stopPropagation(); deleteProject(p.id); });
-    actions.appendChild(editBtn);
-    actions.appendChild(delBtn);
-
-    item.appendChild(main);
-    item.appendChild(actions);
-    projNav.appendChild(item);
-  });
-
-  // Categories list
+  // Categories + nested projects
   const catNav = document.getElementById('categories-nav');
   catNav.innerHTML = '';
   categories.forEach(cat => {
-    const colors = getCatColors(cat.name);
-    const item = document.createElement('div');
-    item.className = 'cat-nav-item' + (currentView.type === 'category' && currentView.id === cat.name ? ' active' : '');
+    const colors     = getCatColors(cat.name);
+    const catProjects = projects.filter(p => p.categoryId === cat.id);
+    const isCatActive = currentView.type === 'category' && currentView.id === cat.name;
 
-    const main = document.createElement('button');
-    main.className = 'cat-nav-main';
-    main.innerHTML = `<span class="proj-dot" style="background:${colors.swatch}"></span><span class="item-label">${escHtml(cat.name)}</span>`;
-    main.addEventListener('click', () => setView('category', cat.name));
+    // ── Category row ──
+    const catRow = document.createElement('div');
+    catRow.className = 'cat-nav-item' + (isCatActive ? ' active' : '');
 
-    const actions = document.createElement('div');
-    actions.className = 'item-actions';
-    const editBtn = document.createElement('button');
-    editBtn.className = 'item-action-btn';
-    editBtn.title = 'Edit';
-    editBtn.innerHTML = '&#9998;';
-    editBtn.addEventListener('click', e => { e.stopPropagation(); openCategoryModal(cat.id); });
-    const delBtn = document.createElement('button');
-    delBtn.className = 'item-action-btn del';
-    delBtn.title = 'Delete';
-    delBtn.innerHTML = '&#x2715;';
-    delBtn.addEventListener('click', e => { e.stopPropagation(); deleteCategory(cat.id); });
-    actions.appendChild(editBtn);
-    actions.appendChild(delBtn);
+    const catMain = document.createElement('button');
+    catMain.className = 'cat-nav-main';
+    catMain.innerHTML = `<span class="proj-dot" style="background:${colors.swatch}"></span><span class="item-label">${escHtml(cat.name)}</span>`;
+    catMain.addEventListener('click', () => setView('category', cat.name));
 
-    item.appendChild(main);
-    item.appendChild(actions);
-    catNav.appendChild(item);
+    const catActions = document.createElement('div');
+    catActions.className = 'item-actions';
+    const catEditBtn = document.createElement('button');
+    catEditBtn.className = 'item-action-btn';
+    catEditBtn.title = 'Edit category';
+    catEditBtn.innerHTML = '&#9998;';
+    catEditBtn.addEventListener('click', e => { e.stopPropagation(); openCategoryModal(cat.id); });
+    const catDelBtn = document.createElement('button');
+    catDelBtn.className = 'item-action-btn del';
+    catDelBtn.title = 'Delete category';
+    catDelBtn.innerHTML = '&#x2715;';
+    catDelBtn.addEventListener('click', e => { e.stopPropagation(); deleteCategory(cat.id); });
+    catActions.appendChild(catEditBtn);
+    catActions.appendChild(catDelBtn);
+    catRow.appendChild(catMain);
+    catRow.appendChild(catActions);
+    catNav.appendChild(catRow);
+
+    // ── Nested project rows ──
+    catProjects.forEach(p => {
+      const isProjActive = currentView.type === 'project' && currentView.id === p.id;
+      const projRow = document.createElement('div');
+      projRow.className = 'cat-proj-item' + (isProjActive ? ' active' : '');
+
+      const projMain = document.createElement('button');
+      projMain.className = 'cat-proj-main';
+      projMain.innerHTML = `<span class="proj-dot" style="background:${p.color};width:7px;height:7px;"></span><span class="item-label">${escHtml(p.name)}</span>`;
+      projMain.addEventListener('click', () => setView('project', p.id));
+
+      const projActions = document.createElement('div');
+      projActions.className = 'item-actions';
+      const projEditBtn = document.createElement('button');
+      projEditBtn.className = 'item-action-btn';
+      projEditBtn.title = 'Edit project';
+      projEditBtn.innerHTML = '&#9998;';
+      projEditBtn.addEventListener('click', e => { e.stopPropagation(); openProjectModal(p.id); });
+      const projDelBtn = document.createElement('button');
+      projDelBtn.className = 'item-action-btn del';
+      projDelBtn.title = 'Delete project';
+      projDelBtn.innerHTML = '&#x2715;';
+      projDelBtn.addEventListener('click', e => { e.stopPropagation(); deleteProject(p.id); });
+      projActions.appendChild(projEditBtn);
+      projActions.appendChild(projDelBtn);
+      projRow.appendChild(projMain);
+      projRow.appendChild(projActions);
+      catNav.appendChild(projRow);
+    });
+
+    // ── Add project button under this category ──
+    const addProjBtn = document.createElement('button');
+    addProjBtn.className = 'cat-add-proj-btn';
+    addProjBtn.innerHTML = '+ add project';
+    addProjBtn.addEventListener('click', () => openProjectModal(null, cat.id));
+    catNav.appendChild(addProjBtn);
   });
 
   // Highlight active main nav buttons
@@ -497,18 +519,16 @@ function buildWeekTaskCard(task) {
     card.style.borderLeftWidth = '5px';
   }
 
-  // Footer: "Project · Category" (only if there's a project; category always shown)
-  let footerHtml = '';
-  if (proj) footerHtml += `<span style="font-weight:700;color:${proj.color};">${escHtml(proj.name)}</span><span class="card-info-sep">·</span>`;
-  footerHtml += `<span style="color:${catColors.text};">${escHtml(task.category)}</span>`;
-  if (overdue)  footerHtml += `<span class="card-info-sep">·</span><span style="color:#ef4444;font-weight:700;">Overdue</span>`;
-  else if (dueSoon) footerHtml += `<span class="card-info-sep">·</span><span style="color:#f59e0b;font-weight:700;">Soon</span>`;
+  // Urgency pill (text-only indicator since labels are removed from week cards)
+  let urgencyHtml = '';
+  if (overdue)  urgencyHtml = `<span style="font-size:10px;font-weight:700;color:#ef4444;">Overdue</span>`;
+  else if (dueSoon) urgencyHtml = `<span style="font-size:10px;font-weight:700;color:#f59e0b;">Soon</span>`;
 
   card.innerHTML = `
     <div class="task-check${task.completed ? ' checked' : ''}" data-id="${task.id}" role="checkbox" aria-checked="${task.completed}"></div>
     <div class="week-card-body">
       <div class="task-title" style="color:${catColors.text};">${escHtml(task.title)}</div>
-      <div class="week-card-footer">${footerHtml}</div>
+      ${urgencyHtml ? `<div style="margin-top:4px;">${urgencyHtml}</div>` : ''}
     </div>
   `;
 
@@ -671,12 +691,31 @@ function closeTaskModal() {
 function populateProjectDropdown() {
   const sel = document.getElementById('task-project');
   sel.innerHTML = '<option value="">— None —</option>';
-  projects.forEach(p => {
-    const opt = document.createElement('option');
-    opt.value       = p.id;
-    opt.textContent = p.name;
-    sel.appendChild(opt);
+  // Group projects under their category using optgroups
+  categories.forEach(cat => {
+    const catProjects = projects.filter(p => p.categoryId === cat.id);
+    if (!catProjects.length) return;
+    const grp = document.createElement('optgroup');
+    grp.label = cat.name;
+    catProjects.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id; opt.textContent = p.name;
+      grp.appendChild(opt);
+    });
+    sel.appendChild(grp);
   });
+  // Uncategorized projects
+  const uncatProjects = projects.filter(p => !p.categoryId);
+  if (uncatProjects.length) {
+    const grp = document.createElement('optgroup');
+    grp.label = 'Uncategorized';
+    uncatProjects.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id; opt.textContent = p.name;
+      grp.appendChild(opt);
+    });
+    sel.appendChild(grp);
+  }
 }
 
 function populateCategoryDropdown() {
@@ -761,8 +800,20 @@ function addSubtask() {
 // ══════════════════════════════════════════════
 //   Project Modal (create + edit)
 // ══════════════════════════════════════════════
-function openProjectModal(projectId = null) {
-  editingProjectId = projectId;
+function populateProjCategoryDropdown(selectedId) {
+  const sel = document.getElementById('project-category-input');
+  sel.innerHTML = '<option value="">— None —</option>';
+  categories.forEach(cat => {
+    const opt = document.createElement('option');
+    opt.value = cat.id; opt.textContent = cat.name;
+    if (cat.id === selectedId) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function openProjectModal(projectId = null, categoryId = null) {
+  editingProjectId  = projectId;
+  selectedProjCatId = categoryId;
   const titleEl = document.getElementById('proj-modal-title');
   const delBtn  = document.getElementById('delete-project-btn');
 
@@ -772,6 +823,7 @@ function openProjectModal(projectId = null) {
     titleEl.textContent = 'Edit Project';
     document.getElementById('project-name-input').value = proj.name;
     selectedProjColor = proj.color;
+    selectedProjCatId = proj.categoryId || null;
     delBtn.classList.remove('hidden');
   } else {
     titleEl.textContent = 'New Project';
@@ -780,6 +832,7 @@ function openProjectModal(projectId = null) {
     delBtn.classList.add('hidden');
   }
 
+  populateProjCategoryDropdown(selectedProjCatId);
   renderColorSwatches();
   document.getElementById('project-modal').classList.remove('hidden');
   document.getElementById('project-name-input').focus();
@@ -804,14 +857,15 @@ function renderColorSwatches() {
 }
 
 function saveProject() {
-  const name = document.getElementById('project-name-input').value.trim();
+  const name       = document.getElementById('project-name-input').value.trim();
+  const categoryId = document.getElementById('project-category-input').value || null;
   if (!name) { document.getElementById('project-name-input').focus(); return; }
 
   if (editingProjectId) {
     const proj = projects.find(p => p.id === editingProjectId);
-    if (proj) { proj.name = name; proj.color = selectedProjColor; }
+    if (proj) { proj.name = name; proj.color = selectedProjColor; proj.categoryId = categoryId; }
   } else {
-    projects.push({ id: uid(), name, color: selectedProjColor, createdAt: new Date().toISOString() });
+    projects.push({ id: uid(), name, color: selectedProjColor, categoryId, createdAt: new Date().toISOString() });
   }
 
   saveData();
@@ -911,9 +965,14 @@ function deleteCategory(categoryId) {
   const cat = categories.find(c => c.id === categoryId);
   if (!cat) return;
   const fallback = categories.find(c => c.id !== categoryId).name;
-  if (!confirm(`Delete "${cat.name}"? Tasks will be moved to "${fallback}".`)) return;
+  const projCount = projects.filter(p => p.categoryId === categoryId).length;
+  const msg = projCount
+    ? `Delete "${cat.name}"? Tasks will be moved to "${fallback}" and ${projCount} project(s) will become uncategorized.`
+    : `Delete "${cat.name}"? Tasks will be moved to "${fallback}".`;
+  if (!confirm(msg)) return;
 
   tasks.forEach(t => { if (t.category === cat.name) t.category = fallback; });
+  projects.forEach(p => { if (p.categoryId === categoryId) p.categoryId = null; });
   categories = categories.filter(c => c.id !== categoryId);
   if (currentView.type === 'category' && currentView.id === cat.name) {
     currentView = { type: 'today', id: null };
@@ -971,8 +1030,10 @@ function escHtml(str) {
 function seedDemoData() {
   if (tasks.length || projects.length) return;
 
-  const p1 = { id: uid(), name: 'Work',     color: '#6366f1', createdAt: new Date().toISOString() };
-  const p2 = { id: uid(), name: 'Personal', color: '#22c55e', createdAt: new Date().toISOString() };
+  const catWork     = categories.find(c => c.name === 'Work');
+  const catPersonal = categories.find(c => c.name === 'Personal');
+  const p1 = { id: uid(), name: 'Work',     color: '#6366f1', categoryId: catWork     ? catWork.id     : null, createdAt: new Date().toISOString() };
+  const p2 = { id: uid(), name: 'Personal', color: '#22c55e', categoryId: catPersonal ? catPersonal.id : null, createdAt: new Date().toISOString() };
   projects.push(p1, p2);
 
   const today        = todayStr();
@@ -1047,6 +1108,16 @@ function wireEvents() {
   document.getElementById('delete-task-btn').addEventListener('click', () => {
     if (editingTaskId) { deleteTask(editingTaskId); closeTaskModal(); renderAll(); }
   });
+  // Auto-sync category when a project is chosen
+  document.getElementById('task-project').addEventListener('change', () => {
+    const projId = document.getElementById('task-project').value;
+    if (!projId) return;
+    const proj = projects.find(p => p.id === projId);
+    if (proj && proj.categoryId) {
+      const cat = categories.find(c => c.id === proj.categoryId);
+      if (cat) document.getElementById('task-category').value = cat.name;
+    }
+  });
 
   // Subtasks
   document.getElementById('add-subtask-btn').addEventListener('click', addSubtask);
@@ -1069,7 +1140,6 @@ function wireEvents() {
   });
 
   // Project modal
-  document.getElementById('add-project-btn').addEventListener('click', () => openProjectModal());
   document.getElementById('proj-modal-close-btn').addEventListener('click', closeProjectModal);
   document.getElementById('cancel-project-btn').addEventListener('click', closeProjectModal);
   document.getElementById('save-project-btn').addEventListener('click', saveProject);
@@ -1109,6 +1179,7 @@ function wireEvents() {
 function init() {
   loadData();
   seedCategories();
+  migrateProjects();
   seedDemoData();
   wireEvents();
   renderAll();
