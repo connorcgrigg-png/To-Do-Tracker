@@ -28,6 +28,9 @@
     <button class="nav-btn" data-view="dashboard">
       <span class="nav-icon">&#9646;</span> Dashboard
     </button>
+    <button class="nav-btn" data-view="archive">
+      <span class="nav-icon">&#128193;</span> Archive
+    </button>
   </section>
 
   <section class="nav-section">
@@ -171,7 +174,10 @@
       </label>
     </div>
     <div class="modal-footer">
-      <button class="btn-danger hidden" id="delete-project-btn">Delete</button>
+      <div class="footer-left">
+        <button class="btn-danger hidden" id="delete-project-btn">Delete</button>
+        <button class="btn-archive hidden" id="archive-project-btn">Archive</button>
+      </div>
       <div class="footer-right">
         <button class="btn-ghost" id="cancel-project-btn">Cancel</button>
         <button class="btn-primary" id="save-project-btn">Save Project</button>
@@ -196,7 +202,10 @@
       </label>
     </div>
     <div class="modal-footer">
-      <button class="btn-danger hidden" id="delete-category-btn">Delete</button>
+      <div class="footer-left">
+        <button class="btn-danger hidden" id="delete-category-btn">Delete</button>
+        <button class="btn-archive hidden" id="archive-category-btn">Archive</button>
+      </div>
       <div class="footer-right">
         <button class="btn-ghost" id="cancel-category-btn">Cancel</button>
         <button class="btn-primary" id="save-category-btn">Save Category</button>

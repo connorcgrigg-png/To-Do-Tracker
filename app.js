@@ -164,12 +164,12 @@ function renderSidebar() {
   document.getElementById('badge-today').textContent = todayCount || '';
   document.getElementById('badge-week').textContent  = weekCount  || '';
 
-  // Categories + nested projects
+  // Categories + nested projects (hide archived)
   const catNav = document.getElementById('categories-nav');
   catNav.innerHTML = '';
-  categories.forEach(cat => {
+  categories.filter(c => !c.archived).forEach(cat => {
     const colors     = getCatColors(cat.name);
-    const catProjects = projects.filter(p => p.categoryId === cat.id);
+    const catProjects = projects.filter(p => p.categoryId === cat.id && !p.archived);
     const isCatActive = currentView.type === 'category' && currentView.id === cat.name;
 
     // ── Category row ──
@@ -281,6 +281,10 @@ function renderMainView() {
     case 'week':
       titleEl.textContent = 'This Week';
       renderWeekCalendar();
+      return;
+    case 'archive':
+      titleEl.textContent = 'Archive';
+      renderArchive();
       return;
     case 'project': {
       const proj = projects.find(p => p.id === currentView.id);
@@ -808,9 +812,9 @@ function closeTaskModal() {
 function populateProjectDropdown() {
   const sel = document.getElementById('task-project');
   sel.innerHTML = '<option value="">— None —</option>';
-  // Group projects under their category using optgroups
-  categories.forEach(cat => {
-    const catProjects = projects.filter(p => p.categoryId === cat.id);
+  // Group projects under their category using optgroups (hide archived)
+  categories.filter(c => !c.archived).forEach(cat => {
+    const catProjects = projects.filter(p => p.categoryId === cat.id && !p.archived);
     if (!catProjects.length) return;
     const grp = document.createElement('optgroup');
     grp.label = cat.name;
@@ -821,8 +825,8 @@ function populateProjectDropdown() {
     });
     sel.appendChild(grp);
   });
-  // Uncategorized projects
-  const uncatProjects = projects.filter(p => !p.categoryId);
+  // Uncategorized projects (hide archived)
+  const uncatProjects = projects.filter(p => !p.categoryId && !p.archived);
   if (uncatProjects.length) {
     const grp = document.createElement('optgroup');
     grp.label = 'Uncategorized';
@@ -838,7 +842,7 @@ function populateProjectDropdown() {
 function populateCategoryDropdown() {
   const sel = document.getElementById('task-category');
   sel.innerHTML = '';
-  categories.forEach(cat => {
+  categories.filter(c => !c.archived).forEach(cat => {
     const opt = document.createElement('option');
     opt.value       = cat.name;
     opt.textContent = cat.name;
@@ -932,8 +936,9 @@ function populateProjCategoryDropdown(selectedId) {
 function openProjectModal(projectId = null, categoryId = null) {
   editingProjectId  = projectId;
   selectedProjCatId = categoryId;
-  const titleEl = document.getElementById('proj-modal-title');
-  const delBtn  = document.getElementById('delete-project-btn');
+  const titleEl    = document.getElementById('proj-modal-title');
+  const delBtn     = document.getElementById('delete-project-btn');
+  const archiveBtn = document.getElementById('archive-project-btn');
 
   if (projectId) {
     const proj = projects.find(p => p.id === projectId);
@@ -943,11 +948,14 @@ function openProjectModal(projectId = null, categoryId = null) {
     selectedProjColor = proj.color;
     selectedProjCatId = proj.categoryId || null;
     delBtn.classList.remove('hidden');
+    archiveBtn.classList.remove('hidden');
+    archiveBtn.textContent = proj.archived ? 'Restore' : 'Archive';
   } else {
     titleEl.textContent = 'New Project';
     document.getElementById('project-name-input').value = '';
     selectedProjColor = PROJECT_COLORS[0];
     delBtn.classList.add('hidden');
+    archiveBtn.classList.add('hidden');
   }
 
   populateProjCategoryDropdown(selectedProjCatId);
@@ -1008,8 +1016,9 @@ function deleteProject(projectId) {
 // ══════════════════════════════════════════════
 function openCategoryModal(categoryId = null) {
   editingCategoryId = categoryId;
-  const titleEl = document.getElementById('cat-modal-title');
-  const delBtn  = document.getElementById('delete-category-btn');
+  const titleEl    = document.getElementById('cat-modal-title');
+  const delBtn     = document.getElementById('delete-category-btn');
+  const archiveBtn = document.getElementById('archive-category-btn');
 
   if (categoryId) {
     const cat = categories.find(c => c.id === categoryId);
@@ -1018,11 +1027,14 @@ function openCategoryModal(categoryId = null) {
     document.getElementById('category-name-input').value = cat.name;
     selectedCatColorIdx = cat.colorIdx ?? 0;
     delBtn.classList.remove('hidden');
+    archiveBtn.classList.remove('hidden');
+    archiveBtn.textContent = cat.archived ? 'Restore' : 'Archive';
   } else {
     titleEl.textContent = 'New Category';
     document.getElementById('category-name-input').value = '';
     selectedCatColorIdx = 0;
     delBtn.classList.add('hidden');
+    archiveBtn.classList.add('hidden');
   }
 
   renderCategoryColorSwatches();
@@ -1098,6 +1110,159 @@ function deleteCategory(categoryId) {
   saveData();
   closeCategoryModal();
   renderAll();
+}
+
+// ══════════════════════════════════════════════
+//   Archive
+// ══════════════════════════════════════════════
+function archiveProject(projectId) {
+  const proj = projects.find(p => p.id === projectId);
+  if (!proj) return;
+  proj.archived = !proj.archived;
+  if (proj.archived && currentView.type === 'project' && currentView.id === projectId) {
+    currentView = { type: 'today', id: null };
+  }
+  saveData();
+  closeProjectModal();
+  renderAll();
+}
+
+function archiveCategory(categoryId) {
+  const cat = categories.find(c => c.id === categoryId);
+  if (!cat) return;
+  cat.archived = !cat.archived;
+  if (cat.archived && currentView.type === 'category' && currentView.id === cat.name) {
+    currentView = { type: 'today', id: null };
+  }
+  saveData();
+  closeCategoryModal();
+  renderAll();
+}
+
+function renderArchive() {
+  const container = document.getElementById('task-groups');
+  const emptyMsg  = document.getElementById('empty-msg');
+  container.innerHTML = '';
+  emptyMsg.classList.add('hidden');
+
+  const completedTasks      = tasks.filter(t => t.completed);
+  const archivedProjects    = projects.filter(p => p.archived);
+  const archivedCategories  = categories.filter(c => c.archived);
+
+  if (!completedTasks.length && !archivedProjects.length && !archivedCategories.length) {
+    emptyMsg.textContent = 'Nothing archived yet.';
+    emptyMsg.classList.remove('hidden');
+    return;
+  }
+
+  // ── Section: Completed Tasks ──
+  if (completedTasks.length) {
+    container.appendChild(_archiveHeading(`Completed Tasks`, completedTasks.length));
+
+    groupTasksByCategory(completedTasks).forEach(({ cat, tasks: catTasks }) => {
+      const section   = document.createElement('div');
+      section.className = 'task-project-section';
+      const colors    = cat ? getCatColors(cat.name) : getCatColors(null);
+      const swatch    = cat ? (colors.swatch || colors.text) : 'var(--color-text-muted)';
+      const header    = document.createElement('div');
+      header.className = 'task-project-header';
+      header.innerHTML = `
+        <span class="proj-dot" style="background:${swatch}"></span>
+        <span class="task-project-name" style="color:${swatch}">${cat ? escHtml(cat.name) : 'Uncategorized'}</span>
+        <span class="group-count">${catTasks.length}</span>
+      `;
+      section.appendChild(header);
+
+      groupTasksByProject(catTasks).forEach(({ proj, tasks: projTasks }, idx) => {
+        const sub = document.createElement('div');
+        sub.className = 'task-proj-subheader' + (idx === 0 ? ' first' : '');
+        const pc = proj ? proj.color : 'var(--color-text-muted)';
+        sub.innerHTML = `
+          <span class="proj-dot" style="background:${pc}"></span>
+          <span style="color:${pc}">${proj ? escHtml(proj.name) : 'No Project'}</span>
+          <span class="subgroup-count">${projTasks.length}</span>
+        `;
+        section.appendChild(sub);
+        const wrap = document.createElement('div');
+        wrap.className = 'task-proj-subgroup';
+        projTasks.forEach(t => wrap.appendChild(buildTaskCard(t)));
+        section.appendChild(wrap);
+      });
+      container.appendChild(section);
+    });
+  }
+
+  // ── Section: Archived Projects ──
+  if (archivedProjects.length) {
+    container.appendChild(_archiveHeading('Archived Projects'));
+    archivedProjects.forEach(proj => {
+      const projTasks = tasks.filter(t => t.projectId === proj.id);
+      container.appendChild(_archivedItemBlock(
+        proj.color, proj.name, projTasks,
+        () => archiveProject(proj.id)
+      ));
+    });
+  }
+
+  // ── Section: Archived Categories ──
+  if (archivedCategories.length) {
+    container.appendChild(_archiveHeading('Archived Categories'));
+    archivedCategories.forEach(cat => {
+      const catTasks = tasks.filter(t => t.category === cat.name);
+      const colors   = getCatColors(cat.name);
+      container.appendChild(_archivedItemBlock(
+        colors.swatch || colors.text, cat.name, catTasks,
+        () => archiveCategory(cat.id)
+      ));
+    });
+  }
+}
+
+function _archiveHeading(label, count) {
+  const h = document.createElement('h3');
+  h.className = 'archive-section-heading';
+  h.innerHTML = escHtml(label) + (count != null ? ` <span class="archive-heading-count">${count}</span>` : '');
+  return h;
+}
+
+function _archivedItemBlock(color, name, itemTasks, onRestore) {
+  const section = document.createElement('div');
+  section.className = 'task-project-section archive-item-section';
+
+  const header = document.createElement('div');
+  header.className = 'task-project-header';
+
+  const dot = document.createElement('span');
+  dot.className = 'proj-dot';
+  dot.style.background = color;
+
+  const label = document.createElement('span');
+  label.className = 'task-project-name';
+  label.style.color = color;
+  label.textContent = name;
+
+  const count = document.createElement('span');
+  count.className = 'group-count';
+  count.textContent = `${itemTasks.length} task${itemTasks.length !== 1 ? 's' : ''}`;
+
+  const restoreBtn = document.createElement('button');
+  restoreBtn.className = 'restore-btn';
+  restoreBtn.textContent = 'Restore';
+  restoreBtn.addEventListener('click', onRestore);
+
+  header.appendChild(dot);
+  header.appendChild(label);
+  header.appendChild(count);
+  header.appendChild(restoreBtn);
+  section.appendChild(header);
+
+  if (itemTasks.length) {
+    const wrap = document.createElement('div');
+    wrap.className = 'task-proj-subgroup';
+    itemTasks.forEach(t => wrap.appendChild(buildTaskCard(t)));
+    section.appendChild(wrap);
+  }
+  return section;
 }
 
 // ══════════════════════════════════════════════
@@ -1264,6 +1429,9 @@ function wireEvents() {
   document.getElementById('delete-project-btn').addEventListener('click', () => {
     if (editingProjectId) deleteProject(editingProjectId);
   });
+  document.getElementById('archive-project-btn').addEventListener('click', () => {
+    if (editingProjectId) archiveProject(editingProjectId);
+  });
   document.getElementById('project-name-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') { e.preventDefault(); saveProject(); }
   });
@@ -1275,6 +1443,9 @@ function wireEvents() {
   document.getElementById('save-category-btn').addEventListener('click', saveCategory);
   document.getElementById('delete-category-btn').addEventListener('click', () => {
     if (editingCategoryId) deleteCategory(editingCategoryId);
+  });
+  document.getElementById('archive-category-btn').addEventListener('click', () => {
+    if (editingCategoryId) archiveCategory(editingCategoryId);
   });
   document.getElementById('category-name-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') { e.preventDefault(); saveCategory(); }
