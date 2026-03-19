@@ -149,12 +149,10 @@ function isOverdue(dateStr) { return dateStr && dateStr < todayStr(); }
  * Incomplete tasks are always shown — this predicate is only for completed ones.
  */
 function completedIsThisWeek(t) {
-  const wkS = weekStartStr();
-  const wkE = weekEndStr();
+  // A completed task is shown only if it was completed within the current Mon-Sun week.
+  // Tasks with no completedAt (old data) are treated as long-ago completed → hidden.
   const cd = localDateOfISO(t.completedAt);
-  if (cd && cd >= wkS && cd <= wkE) return true;
-  if (t.dueDate && t.dueDate >= wkS && t.dueDate <= wkE) return true;
-  return false;
+  return cd !== null && cd >= weekStartStr() && cd <= weekEndStr();
 }
 
 /** Sort comparator: ascending by dueDate, tasks with no date sink to the bottom */
@@ -380,6 +378,12 @@ function groupTasksByProject(taskList) {
 }
 
 function renderTaskGroups(taskList, groupBy = 'project', sortByDate = false) {
+  // In project/category views, always strip completed tasks from outside the current week,
+  // regardless of how this function was called.
+  if (currentView.type === 'project' || currentView.type === 'category') {
+    taskList = taskList.filter(t => !t.completed || completedIsThisWeek(t));
+  }
+
   const container = document.getElementById('task-groups');
   const emptyMsg  = document.getElementById('empty-msg');
   container.innerHTML = '';
