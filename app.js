@@ -276,7 +276,8 @@ function renderMainView() {
     case 'today':
       titleEl.textContent = 'Today';
       filteredTasks = tasks.filter(t => isToday(t.dueDate));
-      break;
+      renderTaskGroups(filteredTasks, 'category');
+      return;
     case 'week':
       titleEl.textContent = 'This Week';
       renderWeekCalendar();
@@ -300,6 +301,22 @@ function renderMainView() {
 //   Task list rendering
 // ══════════════════════════════════════════════
 
+/** Group an array of tasks by category, returning [{cat, tasks}] in category order */
+function groupTasksByCategory(taskList) {
+  const map = new Map();
+  taskList.forEach(t => {
+    const key = t.category || '__none__';
+    if (!map.has(key)) map.set(key, []);
+    map.get(key).push(t);
+  });
+  const result = [];
+  categories.forEach(c => {
+    if (map.has(c.name)) result.push({ cat: c, tasks: map.get(c.name) });
+  });
+  if (map.has('__none__')) result.push({ cat: null, tasks: map.get('__none__') });
+  return result;
+}
+
 /** Group an array of tasks by projectId, returning [{proj, tasks}] in project order */
 function groupTasksByProject(taskList) {
   const map = new Map();
@@ -316,7 +333,7 @@ function groupTasksByProject(taskList) {
   return result;
 }
 
-function renderTaskGroups(taskList) {
+function renderTaskGroups(taskList, groupBy = 'project') {
   const container = document.getElementById('task-groups');
   const emptyMsg  = document.getElementById('empty-msg');
   container.innerHTML = '';
@@ -327,17 +344,40 @@ function renderTaskGroups(taskList) {
   }
   emptyMsg.classList.add('hidden');
 
-  const groups = groupTasksByProject(taskList);
-  groups.forEach(({ proj, tasks: groupTasks }) => {
+  if (groupBy === 'category') {
+    groupTasksByCategory(taskList).forEach(({ cat, tasks: groupTasks }) => {
+      const section = document.createElement('div');
+      section.className = 'task-project-section';
+
+      const colors    = cat ? getCatColors(cat.name) : getCatColors(null);
+      const swatchClr = cat ? (colors.swatch || colors.text) : 'var(--color-text-muted)';
+      const label     = cat ? escHtml(cat.name) : 'Uncategorized';
+      const header    = document.createElement('div');
+      header.className = 'task-project-header';
+      header.innerHTML = `
+        <span class="proj-dot" style="background:${swatchClr}"></span>
+        <span class="task-project-name" style="color:${swatchClr}">${label}</span>
+        <span class="group-count">${groupTasks.length}</span>
+      `;
+      section.appendChild(header);
+
+      const pending   = groupTasks.filter(t => !t.completed);
+      const completed = groupTasks.filter(t => t.completed);
+      [...pending, ...completed].forEach(t => section.appendChild(buildTaskCard(t)));
+      container.appendChild(section);
+    });
+    return;
+  }
+
+  groupTasksByProject(taskList).forEach(({ proj, tasks: groupTasks }) => {
     const section = document.createElement('div');
     section.className = 'task-project-section';
 
-    // Project section header
-    const header = document.createElement('div');
-    header.className = 'task-project-header';
-    const dotColor = proj ? proj.color : 'var(--color-text-muted)';
+    const dotColor  = proj ? proj.color : 'var(--color-text-muted)';
     const nameColor = proj ? proj.color : 'var(--color-text-muted)';
-    const label = proj ? escHtml(proj.name) : 'No Project';
+    const label     = proj ? escHtml(proj.name) : 'No Project';
+    const header    = document.createElement('div');
+    header.className = 'task-project-header';
     header.innerHTML = `
       <span class="proj-dot" style="background:${dotColor}"></span>
       <span class="task-project-name" style="color:${nameColor}">${label}</span>
@@ -345,11 +385,9 @@ function renderTaskGroups(taskList) {
     `;
     section.appendChild(header);
 
-    // Pending first, then completed
     const pending   = groupTasks.filter(t => !t.completed);
     const completed = groupTasks.filter(t => t.completed);
     [...pending, ...completed].forEach(t => section.appendChild(buildTaskCard(t)));
-
     container.appendChild(section);
   });
 }
