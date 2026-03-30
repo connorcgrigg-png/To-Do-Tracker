@@ -582,6 +582,12 @@ function renderWeekCalendar() {
       grpTasks.forEach(t => tasksZone.appendChild(buildWeekTaskCard(t)));
     });
 
+    const addBtn = document.createElement('button');
+    addBtn.className = 'week-day-add-btn';
+    addBtn.textContent = '+ Add task';
+    addBtn.addEventListener('click', () => openTaskModal(null, dateStr));
+    tasksZone.appendChild(addBtn);
+
     tasksZone.addEventListener('dragover', e => {
       e.preventDefault();
       tasksZone.classList.add('drag-over');
@@ -813,7 +819,7 @@ function deleteTask(taskId) {
 // ══════════════════════════════════════════════
 //   Task Modal
 // ══════════════════════════════════════════════
-function openTaskModal(taskId = null) {
+function openTaskModal(taskId = null, prefillDate = null) {
   editingTaskId = taskId;
   const modal  = document.getElementById('task-modal');
   const title  = document.getElementById('modal-title');
@@ -839,7 +845,7 @@ function openTaskModal(taskId = null) {
     document.getElementById('task-title').value    = '';
     document.getElementById('task-project').value  = currentView.type === 'project'  ? (currentView.id || '') : '';
     document.getElementById('task-category').value = currentView.type === 'category' ? currentView.id : (categories[0] ? categories[0].name : '');
-    document.getElementById('task-due').value       = currentView.type === 'today' ? todayStr() : '';
+    document.getElementById('task-due').value       = prefillDate || (currentView.type === 'today' ? todayStr() : '');
     document.getElementById('task-notes').value     = '';
     document.getElementById('task-priority').checked = false;
     modalSubtasks = [];

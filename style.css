@@ -533,6 +533,24 @@ label input, label select, label textarea { font-size: 14px; text-transform: non
 }
 .week-day-tasks.drag-over { background: rgba(99,102,241,.07); }
 
+.week-day-add-btn {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 5px 0;
+  background: none;
+  border: 1.5px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color var(--transition), color var(--transition);
+}
+.week-day-add-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
 /* Project mini-header inside week day columns */
 .week-proj-mini-header {
   display: flex;
