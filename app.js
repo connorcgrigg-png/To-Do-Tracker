@@ -672,13 +672,11 @@ function buildOutOfWeekBucket(title, taskList, variant) {
 
   const groups = groupTasksByProject(taskList);
   groups.forEach(({ proj: grpProj, tasks: grpTasks }) => {
-    if (groups.length > 1) {
-      const hdr = document.createElement('div');
-      hdr.className = 'week-proj-mini-header';
-      const dotColor = grpProj ? grpProj.color : 'var(--color-text-muted)';
-      hdr.innerHTML = `<span class="proj-dot" style="background:${dotColor}"></span><span style="color:${dotColor}">${grpProj ? escHtml(grpProj.name) : 'No Project'}</span>`;
-      cardRow.appendChild(hdr);
-    }
+    const hdr = document.createElement('div');
+    hdr.className = 'week-proj-mini-header';
+    const dotColor = grpProj ? grpProj.color : 'var(--color-text-muted)';
+    hdr.innerHTML = `<span class="proj-dot" style="background:${dotColor}"></span><span style="color:${dotColor}">${grpProj ? escHtml(grpProj.name) : 'No Project'}</span>`;
+    cardRow.appendChild(hdr);
     grpTasks.forEach(t => {
       const card = buildWeekTaskCard(t);
       // Show the due date on each card so user knows when it was/is due
