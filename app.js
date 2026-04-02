@@ -307,8 +307,7 @@ function renderMainView() {
   switch (currentView.type) {
     case 'today':
       titleEl.textContent = 'Today';
-      filteredTasks = tasks.filter(t => isToday(t.dueDate));
-      renderTaskGroups(filteredTasks, 'category');
+      renderToday();
       return;
     case 'week':
       titleEl.textContent = 'This Week';
@@ -380,7 +379,7 @@ function groupTasksByProject(taskList) {
   return result;
 }
 
-function renderTaskGroups(taskList, groupBy = 'project', sortByDate = false) {
+function renderTaskGroups(taskList, groupBy = 'project', sortByDate = false, clearContainer = true) {
   // In project/category views, always strip completed tasks from outside the current week,
   // regardless of how this function was called.
   if (currentView.type === 'project' || currentView.type === 'category') {
@@ -391,10 +390,10 @@ function renderTaskGroups(taskList, groupBy = 'project', sortByDate = false) {
 
   const container = document.getElementById('task-groups');
   const emptyMsg  = document.getElementById('empty-msg');
-  container.innerHTML = '';
+  if (clearContainer) container.innerHTML = '';
 
   if (taskList.length === 0) {
-    emptyMsg.classList.remove('hidden');
+    if (clearContainer) emptyMsg.classList.remove('hidden');
     return;
   }
   emptyMsg.classList.add('hidden');
@@ -535,6 +534,33 @@ function buildTaskCard(task) {
   card.addEventListener('click', () => openTaskModal(task.id));
 
   return card;
+}
+
+// ══════════════════════════════════════════════
+//   Today view
+// ══════════════════════════════════════════════
+function renderToday() {
+  const container = document.getElementById('task-groups');
+  const emptyMsg  = document.getElementById('empty-msg');
+  container.innerHTML = '';
+  emptyMsg.classList.add('hidden');
+
+  const today        = todayStr();
+  const overdueTasks = tasks.filter(t => !t.completed && t.dueDate && t.dueDate < today);
+  const todayTasks   = tasks.filter(t => t.dueDate === today);
+
+  if (!overdueTasks.length && !todayTasks.length) {
+    emptyMsg.classList.remove('hidden');
+    return;
+  }
+
+  if (overdueTasks.length) {
+    container.appendChild(buildOutOfWeekBucket('Overdue', overdueTasks, 'older'));
+  }
+
+  if (todayTasks.length) {
+    renderTaskGroups(todayTasks, 'category', false, false);
+  }
 }
 
 // ══════════════════════════════════════════════
